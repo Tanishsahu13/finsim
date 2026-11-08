@@ -28,6 +28,15 @@ jobs:
 
       - name: Install Hurl
         run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2t64 || sudo apt-get install -y libxml2 || sudo apt-get install -y libxml2-dev || true
+          if ! ldconfig -p | grep -q "libxml2.so.2"; then
+            XML2=$(find /usr/lib -name "libxml2.so*" 2>/dev/null | head -n 1)
+            if [ -n "$XML2" ]; then
+              sudo ln -s "$XML2" /usr/lib/x86_64-linux-gnu/libxml2.so.2 || true
+              sudo ldconfig
+            fi
+          fi
           mkdir -p /tmp/hurl-install
           cd /tmp/hurl-install
           VERSION=$(curl -fsS https://api.github.com/repos/Orange-OpenSource/hurl/releases/latest | grep '"tag_name"' | cut -d '"' -f4)
