@@ -93,7 +93,7 @@ finsim transfer ...        # ends in UNKNOWN, not FAILED
 
 ## Contributing
 
-Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [good first issues](https://github.com/mhnuk2007/finsim/labels/good%20first%20issue). Project decisions are described in [GOVERNANCE.md](GOVERNANCE.md).
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [curated good first issues](docs/good-first-issues.md). Project decisions are described in [GOVERNANCE.md](GOVERNANCE.md).
 
 ## License
 

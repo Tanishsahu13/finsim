@@ -59,7 +59,7 @@ Copy `docs/adr/0000-template.md`, describe the context, the decision, and the al
 
 | Label | Meaning |
 |---|---|
-| `good first issue` | Small, well-scoped, mentored |
+| `good first issue` | Small, well-scoped, mentored (see [docs/good-first-issues.md](docs/good-first-issues.md)) |
 | `help wanted` | Maintainers would love a contributor here |
 | `roadmap` | Planned work from `docs/roadmap.md` |
 | `needs-design` | Needs discussion or an ADR before coding |
