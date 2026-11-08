@@ -57,8 +57,8 @@ A timed-out outbound call moves the transfer to UNKNOWN (never REJECTED). Retryi
 *Done when:* scenario test shows the block.
 
 **12. Resolve endpoint** `[milestone-1]`
-`POST /transfers/{id}/resolve` queries each leg via `GET /finsim/v1/payments/{id}` and moves the transfer to COMPLETED or REJECTED.
-*Done when:* both "leg applied" and "leg never arrived" cases resolve correctly.
+`POST /transfers/{id}/resolve` queries each leg via `GET /finsim/v1/payments/{id}` and applies the decision table in [ADR 0001](adr/0001-resolving-unknown-transfers.md): re-send a lost credit with the same idempotency key, reverse the debit only after a definitive rejection, never guess. Requires the ADR to be accepted first.
+*Done when:* every row of the ADR's decision table has a scenario test, and `resolve` is idempotent.
 
 **13. Reason codes** `[milestone-1]` `[gfi]`
 Small registry (AC01, AC04, AM02, AM04, DUPL, MS03, plus FinSim-specific codes). Every rejection must carry one; mark which side emitted it.
@@ -66,7 +66,7 @@ Small registry (AC01, AC04, AM02, AM04, DUPL, MS03, plus FinSim-specific codes).
 
 **14. Property-based test: no duplicate effects** `[milestone-1]`
 Random sequences of duplicate requests, timeouts, and retries never change balances more than once per transfer.
-*Done when:* the property holds across thousands of generated cases in CI.
+*Done when:* the property holds across thousands of generated cases in CI, including repeated `resolve` calls and reversal timeouts (see ADR 0001).
 
 ## Simulation
 

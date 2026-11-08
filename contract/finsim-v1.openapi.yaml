@@ -311,6 +311,11 @@ components:
         accountReference: { type: string, examples: [ACC-1] }
         money: { $ref: "#/components/schemas/Money" }
         reference: { type: string, maxLength: 140, description: End-to-end reference supplied by the originator. }
+        reversalOf:
+          type: string
+          description: |
+            Set only on a reversal leg: the transactionId of the debit being reversed.
+            A reversal is a new CREDIT leg to the source with its own transactionId ("<id>-rev"). See ADR 0001.
         provenance: { $ref: "#/components/schemas/Provenance" }
 
     LegStatus:
@@ -363,6 +368,13 @@ components:
         currentStage: { type: string, examples: [credit_destination] }
         reasonCode: { type: string }
         emittedBy: { type: string, enum: [FINSIM, SOURCE, DESTINATION] }
+        pendingAction:
+          type: string
+          enum: [NONE, RETRY_CREDIT, REVERSE_DEBIT]
+          description: Populated while the state is UNKNOWN. Tells the caller what resolve will do next. See ADR 0001.
+        needsManualReview:
+          type: boolean
+          description: True when automatic resolution cannot proceed (for example the reversal was rejected).
         from: { $ref: "#/components/schemas/AccountRef" }
         to: { $ref: "#/components/schemas/AccountRef" }
         money: { $ref: "#/components/schemas/Money" }
@@ -423,7 +435,7 @@ components:
         code:
           type: string
           description: Machine-readable code. Rejections use ISO 20022-style reason codes where one exists.
-          examples: [AC04, AM04, DUPL, RECONCILIATION_REQUIRED, IDEMPOTENCY_CONFLICT]
+          examples: [AC04, AM04, DUPL, RECONCILIATION_REQUIRED, IDEMPOTENCY_CONFLICT, FINSIM_TIMEOUT]
         message: { type: string }
         stage: { type: string }
         emittedBy: { type: string, enum: [FINSIM, SOURCE, DESTINATION] }

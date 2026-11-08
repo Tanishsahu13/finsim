@@ -55,10 +55,14 @@ CREATED → ACCEPTED → IN_PROGRESS → COMPLETED   (terminal)
 1. `POST /api/v1/networks/sandbox/transfers` with `Idempotency-Key: t-001`.
 2. FinSim sends `DEBIT` to `bank-a`; it answers `COMPLETED`.
 3. FinSim sends `CREDIT` to `bank-b`; the call times out (a fault rule, or a real outage).
-4. The transfer becomes `UNKNOWN`. Retrying returns `409 RECONCILIATION_REQUIRED`.
-5. `POST /api/v1/transfers/{id}/resolve` asks `bank-b` for the leg's status. If it applied the credit, the transfer becomes `COMPLETED`; if it never arrived, FinSim reverses the debit through the contract (or marks the transfer `REJECTED`, depending on the scheme rules) and records both steps in the trace.
+4. The transfer becomes `UNKNOWN` with `pendingAction: RETRY_CREDIT`. Retrying returns `409 RECONCILIATION_REQUIRED`.
+5. `POST /api/v1/transfers/{id}/resolve` asks `bank-b` for the leg's status:
+   - If it already applied the credit, the transfer becomes `COMPLETED`.
+   - If it never received the call (`404`), FinSim re-sends the same `CREDIT` with the same `Idempotency-Key` once, then re-evaluates.
+   - If it definitively rejected the credit, FinSim reverses the debit with a new `CREDIT` leg to `bank-a` (`transactionId` `<id>-rev`, `reversalOf` set). The transfer becomes `REJECTED` once the reversal completes.
+   - If `bank-b` cannot be reached, the transfer stays `UNKNOWN`; call `resolve` again later.
 
-> The exact reversal behavior in step 5 is an open design point for milestone 1. Whichever way it is decided, it must be written up as an ADR.
+The full decision table, and why FinSim never reverses on a timeout alone, is in [ADR 0001](adr/0001-resolving-unknown-transfers.md).
 
 ## Versioning
 
