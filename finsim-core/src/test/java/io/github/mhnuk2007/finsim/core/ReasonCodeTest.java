@@ -24,28 +24,33 @@ class ReasonCodeTest {
   @DisplayName("FinSim specific reason codes are not classified as ISO 20022")
   void testFinSimSpecificCodes() {
     assertThat(ReasonCode.FINSIM_TIMEOUT.isIso20022()).isFalse();
-    assertThat(ReasonCode.RECONCILIATION_REQUIRED.isIso20022()).isFalse();
-    assertThat(ReasonCode.IDEMPOTENCY_CONFLICT.isIso20022()).isFalse();
     assertThat(ReasonCode.CAPABILITY_NOT_SUPPORTED.isIso20022()).isFalse();
     assertThat(ReasonCode.INVALID_ACCOUNT.isIso20022()).isFalse();
   }
 
+  @Test
+  @DisplayName("All ReasonCodes are valid transfer rejection reasons")
+  void allReasonCodesAreRejectionReasons() {
+    for (ReasonCode rc : ReasonCode.values()) {
+      assertThat(rc.isRejectionReason()).isTrue();
+    }
+  }
+
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "AC01",
-        "AC04",
-        "AM02",
-        "AM04",
-        "DUPL",
-        "MS03",
-        "FINSIM_TIMEOUT",
-        "RECONCILIATION_REQUIRED"
-      })
-  @DisplayName("Known reason codes can be looked up by string")
+  @ValueSource(strings = {"AC01", "AC04", "AM02", "AM04", "DUPL", "MS03", "FINSIM_TIMEOUT", "CAPABILITY_NOT_SUPPORTED"})
+  @DisplayName("Known rejection reason codes can be looked up by string")
   void testFindKnownCodes(String code) {
     assertThat(ReasonCode.find(code)).isPresent();
     assertThat(ReasonCode.isKnown(code)).isTrue();
+  }
+
+  @Test
+  @DisplayName("API error codes are not part of ReasonCode registry")
+  void apiErrorCodesAreSeparate() {
+    assertThat(ReasonCode.find("IDEMPOTENCY_CONFLICT")).isEmpty();
+    assertThat(ReasonCode.find("RECONCILIATION_REQUIRED")).isEmpty();
+    assertThat(ApiErrorCode.find("IDEMPOTENCY_CONFLICT")).isPresent();
+    assertThat(ApiErrorCode.find("RECONCILIATION_REQUIRED")).isPresent();
   }
 
   @Test

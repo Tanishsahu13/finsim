@@ -8,9 +8,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Reason codes used in rejections and error responses.
+ * Rejection reason codes for transfer legs and network rejection.
  *
- * <p>Includes standard ISO 20022 reason codes and FinSim-specific network codes.
+ * <p>Every rejection of a transfer must carry a reason code and indicate which entity emitted it
+ * (FINSIM, SOURCE, or DESTINATION).
+ *
+ * <p>API-level HTTP errors (such as {@code IDEMPOTENCY_CONFLICT} or {@code RECONCILIATION_REQUIRED})
+ * belong to {@link ApiErrorCode}, not transfer rejection.
  */
 public enum ReasonCode {
 
@@ -22,14 +26,8 @@ public enum ReasonCode {
   DUPL("DUPL", "Duplicate payment", true),
   MS03("MS03", "Not specified reason agent generated", true),
 
-  // FinSim-specific reason codes
+  // FinSim-specific transfer rejection codes
   FINSIM_TIMEOUT("FINSIM_TIMEOUT", "FinSim outbound call timed out", false),
-  RECONCILIATION_REQUIRED(
-      "RECONCILIATION_REQUIRED",
-      "Transfer is in UNKNOWN state and must be resolved before retry",
-      false),
-  IDEMPOTENCY_CONFLICT(
-      "IDEMPOTENCY_CONFLICT", "Idempotency key reused with different request payload", false),
   CAPABILITY_NOT_SUPPORTED(
       "CAPABILITY_NOT_SUPPORTED", "Institution lacks declared capability for leg", false),
   INVALID_ACCOUNT(
@@ -61,6 +59,10 @@ public enum ReasonCode {
     return iso20022;
   }
 
+  public boolean isRejectionReason() {
+    return true;
+  }
+
   /**
    * Look up a {@link ReasonCode} by its code string.
    *
@@ -75,7 +77,7 @@ public enum ReasonCode {
   }
 
   /**
-   * Checks whether the given code string is a known registered code.
+   * Checks whether the given code string is a known registered rejection reason code.
    *
    * @param code the code string
    * @return {@code true} if registered

@@ -1,5 +1,6 @@
 package io.github.mhnuk2007.finsim.core;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,8 +10,11 @@ import java.util.Objects;
 /**
  * The Transfer aggregate root.
  *
- * <p>Enforces state machine invariants, idempotency key validity, positive money amounts, distinct
- * source and destination accounts, and an append-only stage history.
+ * <p>Enforces state machine invariants, idempotency key validity, positive money amounts,
+ * distinct source and destination accounts, and an append-only stage history.
+ *
+ * <p>This aggregate is strictly deterministic: all timestamp mutations require an explicit
+ * {@link Instant} or {@link Clock} parameter.
  */
 public class Transfer {
 
@@ -77,7 +81,9 @@ public class Transfer {
     this.version = version;
   }
 
-  /** Creates a new Transfer in the {@link TransferState#CREATED} state. */
+  /**
+   * Creates a new Transfer in the {@link TransferState#CREATED} state with an explicit creation timestamp.
+   */
   public static Transfer create(
       String id,
       String networkId,
@@ -87,11 +93,10 @@ public class Transfer {
       Money money,
       String reference,
       Instant createdAt) {
+    Objects.requireNonNull(createdAt, "createdAt timestamp must not be null");
     validateCreationParameters(id, networkId, idempotencyKey, from, to, money, reference);
 
-    Instant creationTime = createdAt != null ? createdAt : Instant.now();
-    StageEntry initialStage =
-        StageEntry.of("created", StageOutcome.PASSED, creationTime, "Transfer created");
+    StageEntry initialStage = StageEntry.of("created", StageOutcome.PASSED, createdAt, "Transfer created");
     List<StageEntry> initialHistory = List.of(initialStage);
 
     return new Transfer(
@@ -110,12 +115,14 @@ public class Transfer {
         false,
         Provenance.SYNTHETIC,
         initialHistory,
-        creationTime,
-        creationTime,
+        createdAt,
+        createdAt,
         0L);
   }
 
-  /** Creates a new Transfer using the current system time as {@code createdAt}. */
+  /**
+   * Creates a new Transfer using the provided {@link Clock}.
+   */
   public static Transfer create(
       String id,
       String networkId,
@@ -123,8 +130,10 @@ public class Transfer {
       AccountRef from,
       AccountRef to,
       Money money,
-      String reference) {
-    return create(id, networkId, idempotencyKey, from, to, money, reference, Instant.now());
+      String reference,
+      Clock clock) {
+    Objects.requireNonNull(clock, "clock must not be null");
+    return create(id, networkId, idempotencyKey, from, to, money, reference, clock.instant());
   }
 
   /**
@@ -223,122 +232,116 @@ public class Transfer {
     }
   }
 
-  /** Accepts this transfer for network processing. Transitions {@code CREATED -> ACCEPTED}. */
+  /**
+   * Accepts this transfer for network processing. Transitions {@code CREATED -> ACCEPTED}.
+   */
   public synchronized void accept(String stage, Instant at) {
+    Objects.requireNonNull(at, "timestamp must not be null");
     transitionTo(TransferState.ACCEPTED);
-    Instant timestamp = at != null ? at : Instant.now();
     this.currentStage = stage;
-    this.updatedAt = timestamp;
-    this.stageHistory.add(StageEntry.of(stage, StageOutcome.PASSED, timestamp));
-  }
-
-  public synchronized void accept(String stage) {
-    accept(stage, Instant.now());
+    this.updatedAt = at;
+    this.stageHistory.add(StageEntry.of(stage, StageOutcome.PASSED, at));
   }
 
   /**
    * Marks this transfer as currently executing payment legs. Transitions to {@code IN_PROGRESS}.
    */
   public synchronized void startProcessing(String stage, Instant at) {
+    Objects.requireNonNull(at, "timestamp must not be null");
     transitionTo(TransferState.IN_PROGRESS);
-    Instant timestamp = at != null ? at : Instant.now();
     this.currentStage = stage;
-    this.updatedAt = timestamp;
-    this.stageHistory.add(StageEntry.of(stage, StageOutcome.PASSED, timestamp));
+    this.updatedAt = at;
+    this.stageHistory.add(StageEntry.of(stage, StageOutcome.PASSED, at));
   }
 
-  public synchronized void startProcessing(String stage) {
-    startProcessing(stage, Instant.now());
-  }
-
-  /** Completes the transfer. Transitions to terminal state {@code COMPLETED}. */
+  /**
+   * Completes the transfer. Transitions to terminal state {@code COMPLETED}.
+   */
   public synchronized void complete(String stage, Instant at) {
+    Objects.requireNonNull(at, "timestamp must not be null");
     transitionTo(TransferState.COMPLETED);
-    Instant timestamp = at != null ? at : Instant.now();
     this.currentStage = stage;
     this.pendingAction = PendingAction.NONE;
-    this.updatedAt = timestamp;
-    this.stageHistory.add(StageEntry.of(stage, StageOutcome.PASSED, timestamp));
-  }
-
-  public synchronized void complete(String stage) {
-    complete(stage, Instant.now());
+    this.updatedAt = at;
+    this.stageHistory.add(StageEntry.of(stage, StageOutcome.PASSED, at));
   }
 
   /**
    * Rejects the transfer. Transitions to terminal state {@code REJECTED}.
    *
    * @param stage stage name
-   * @param reasonCode rejection reason code (must not be null or blank)
+   * @param reasonCode rejection reason code (must not be null or blank, and cannot be an API error code)
    * @param emittedBy who rejected the transfer (must not be null)
    * @param details optional additional details
    * @param at timestamp
    */
   public synchronized void reject(
       String stage, String reasonCode, Emitter emittedBy, String details, Instant at) {
+    Objects.requireNonNull(at, "timestamp must not be null");
     Objects.requireNonNull(reasonCode, "reasonCode must not be null for REJECTED state");
     if (reasonCode.isBlank()) {
       throw new IllegalArgumentException("reasonCode must not be blank for REJECTED state");
     }
+    if (ApiErrorCode.find(reasonCode).isPresent()) {
+      throw new IllegalArgumentException(
+          "API error code '%s' cannot be used as a transfer rejection reason code".formatted(reasonCode));
+    }
     Objects.requireNonNull(emittedBy, "emittedBy must not be null for REJECTED state");
 
     transitionTo(TransferState.REJECTED);
-    Instant timestamp = at != null ? at : Instant.now();
     this.currentStage = stage;
     this.reasonCode = reasonCode;
     this.emittedBy = emittedBy;
     this.pendingAction = PendingAction.NONE;
-    this.updatedAt = timestamp;
+    this.updatedAt = at;
     this.stageHistory.add(
-        StageEntry.of(
-            stage, StageOutcome.FAILED, timestamp, details != null ? details : reasonCode));
+        StageEntry.of(stage, StageOutcome.FAILED, at, details != null ? details : reasonCode));
+  }
+
+  public synchronized void reject(String stage, String reasonCode, Emitter emittedBy, Instant at) {
+    reject(stage, reasonCode, emittedBy, null, at);
   }
 
   public synchronized void reject(
-      String stage, String reasonCode, Emitter emittedBy, String details) {
-    reject(stage, reasonCode, emittedBy, details, Instant.now());
+      String stage, ReasonCode reasonCode, Emitter emittedBy, String details, Instant at) {
+    Objects.requireNonNull(reasonCode, "reasonCode must not be null");
+    reject(stage, reasonCode.code(), emittedBy, details, at);
   }
 
-  public synchronized void reject(String stage, String reasonCode, Emitter emittedBy) {
-    reject(stage, reasonCode, emittedBy, null, Instant.now());
-  }
-
-  /** Marks the transfer outcome as ambiguous due to a timeout. Transitions to {@code UNKNOWN}. */
-  public synchronized void markUnknown(
-      String stage,
-      PendingAction pendingAction,
-      boolean needsManualReview,
-      String details,
-      Instant at) {
-    transitionTo(TransferState.UNKNOWN);
-    Instant timestamp = at != null ? at : Instant.now();
-    this.currentStage = stage;
-    this.pendingAction = pendingAction != null ? pendingAction : PendingAction.NONE;
-    this.needsManualReview = needsManualReview;
-    this.updatedAt = timestamp;
-    this.stageHistory.add(StageEntry.of(stage, StageOutcome.UNKNOWN, timestamp, details));
-  }
-
-  public synchronized void markUnknown(
-      String stage, PendingAction pendingAction, boolean needsManualReview, String details) {
-    markUnknown(stage, pendingAction, needsManualReview, details, Instant.now());
-  }
-
-  public synchronized void markUnknown(
-      String stage, PendingAction pendingAction, boolean needsManualReview) {
-    markUnknown(stage, pendingAction, needsManualReview, null, Instant.now());
-  }
-
-  public synchronized void markUnknown(String stage, PendingAction pendingAction) {
-    markUnknown(stage, pendingAction, false, null, Instant.now());
+  public synchronized void reject(String stage, ReasonCode reasonCode, Emitter emittedBy, Instant at) {
+    Objects.requireNonNull(reasonCode, "reasonCode must not be null");
+    reject(stage, reasonCode.code(), emittedBy, null, at);
   }
 
   /**
-   * Updates resolution status (pending action and manual review flag) while in the {@code UNKNOWN}
-   * state.
+   * Marks the transfer outcome as ambiguous due to a timeout. Transitions to {@code UNKNOWN}.
+   */
+  public synchronized void markUnknown(
+      String stage, PendingAction pendingAction, boolean needsManualReview, String details, Instant at) {
+    Objects.requireNonNull(at, "timestamp must not be null");
+    transitionTo(TransferState.UNKNOWN);
+    this.currentStage = stage;
+    this.pendingAction = pendingAction != null ? pendingAction : PendingAction.NONE;
+    this.needsManualReview = needsManualReview;
+    this.updatedAt = at;
+    this.stageHistory.add(StageEntry.of(stage, StageOutcome.UNKNOWN, at, details));
+  }
+
+  public synchronized void markUnknown(
+      String stage, PendingAction pendingAction, boolean needsManualReview, Instant at) {
+    markUnknown(stage, pendingAction, needsManualReview, null, at);
+  }
+
+  public synchronized void markUnknown(String stage, PendingAction pendingAction, Instant at) {
+    markUnknown(stage, pendingAction, false, null, at);
+  }
+
+  /**
+   * Updates resolution status (pending action and manual review flag) while in the {@code UNKNOWN} state.
    */
   public synchronized void updateResolutionStatus(
       PendingAction pendingAction, boolean needsManualReview, Instant at) {
+    Objects.requireNonNull(at, "timestamp must not be null");
     if (this.state != TransferState.UNKNOWN) {
       throw new IllegalStateException(
           "Cannot update resolution status when transfer is not in UNKNOWN state: current state is "
@@ -346,30 +349,32 @@ public class Transfer {
     }
     this.pendingAction = pendingAction != null ? pendingAction : PendingAction.NONE;
     this.needsManualReview = needsManualReview;
-    this.updatedAt = at != null ? at : Instant.now();
+    this.updatedAt = at;
   }
 
-  public synchronized void updateResolutionStatus(
-      PendingAction pendingAction, boolean needsManualReview) {
-    updateResolutionStatus(pendingAction, needsManualReview, Instant.now());
-  }
-
-  /** Appends an entry to the stage history without altering the transfer state. */
-  public synchronized void recordStage(
-      String stage, StageOutcome outcome, String details, Instant at) {
+  /**
+   * Appends an entry to the stage history without altering the transfer state.
+   */
+  public synchronized void recordStage(String stage, StageOutcome outcome, String details, Instant at) {
     Objects.requireNonNull(stage, "stage must not be null");
     Objects.requireNonNull(outcome, "outcome must not be null");
-    Instant timestamp = at != null ? at : Instant.now();
+    Objects.requireNonNull(at, "timestamp must not be null");
     this.currentStage = stage;
-    this.updatedAt = timestamp;
-    this.stageHistory.add(StageEntry.of(stage, outcome, timestamp, details));
+    this.updatedAt = at;
+    this.stageHistory.add(StageEntry.of(stage, outcome, at, details));
   }
 
-  public synchronized void recordStage(String stage, StageOutcome outcome, String details) {
-    recordStage(stage, outcome, details, Instant.now());
+  public synchronized void recordStage(String stage, StageOutcome outcome, Instant at) {
+    recordStage(stage, outcome, null, at);
   }
 
-  /** Performs and validates state transition. */
+  public synchronized void incrementVersion() {
+    this.version++;
+  }
+
+  /**
+   * Performs and validates state transition.
+   */
   private void transitionTo(TransferState targetState) {
     if (!this.state.canTransitionTo(targetState)) {
       throw new IllegalStateTransitionException(this.id, this.state, targetState);
@@ -431,7 +436,9 @@ public class Transfer {
     return needsManualReview;
   }
 
-  /** Returns an unmodifiable view of the append-only stage history. */
+  /**
+   * Returns an unmodifiable view of the append-only stage history.
+   */
   public synchronized List<StageEntry> getStageHistory() {
     return Collections.unmodifiableList(new ArrayList<>(stageHistory));
   }
@@ -467,34 +474,18 @@ public class Transfer {
   @Override
   public synchronized String toString() {
     return "Transfer{"
-        + "id='"
-        + id
-        + '\''
-        + ", networkId='"
-        + networkId
-        + '\''
-        + ", state="
-        + state
-        + ", currentStage='"
-        + currentStage
-        + '\''
-        + ", from="
-        + from
-        + ", to="
-        + to
-        + ", money="
-        + money
-        + ", reasonCode='"
-        + reasonCode
-        + '\''
-        + ", emittedBy="
-        + emittedBy
-        + ", pendingAction="
-        + pendingAction
-        + ", needsManualReview="
-        + needsManualReview
-        + ", stages="
-        + stageHistory.size()
+        + "id='" + id + '\''
+        + ", networkId='" + networkId + '\''
+        + ", state=" + state
+        + ", currentStage='" + currentStage + '\''
+        + ", from=" + from
+        + ", to=" + to
+        + ", money=" + money
+        + ", reasonCode='" + reasonCode + '\''
+        + ", emittedBy=" + emittedBy
+        + ", pendingAction=" + pendingAction
+        + ", needsManualReview=" + needsManualReview
+        + ", stages=" + stageHistory.size()
         + '}';
   }
 }
