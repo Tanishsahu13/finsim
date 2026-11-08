@@ -5,6 +5,7 @@ out/
 target/
 
 # IDE
+bin/
 .idea/
 *.iml
 .vscode/
