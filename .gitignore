@@ -1,0 +1,29 @@
+# Build
+build/
+.gradle/
+out/
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (sample institutions)
+node_modules/
+
+# Local environment and secrets
+.env
+*.local
+*.pem
+*.key
+
+# Logs
+*.log

@@ -1,0 +1,17 @@
+# Central place for dependency versions. Dependabot proposes updates to this file.
+[versions]
+spring-boot = "4.1.2"
+spring-modulith = "2.1.0"
+archunit = "1.4.2"
+picocli = "4.7.7"
+spotless = "7.2.1"
+
+[libraries]
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
+archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

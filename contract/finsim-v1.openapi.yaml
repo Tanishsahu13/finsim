@@ -1,0 +1,430 @@
+openapi: 3.1.0
+info:
+  title: FinSim contract v1 (milestone-1 sketch)
+  version: 0.1.0-draft
+  description: |
+    Milestone-1 sketch of the FinSim API surface. DRAFT: expect changes before 1.0.
+
+    Two surfaces live in this file:
+
+    * **Participant contract** (`/finsim/v1/...`): implemented by every institution (bank, merchant, gateway).
+      FinSim calls these endpoints.
+    * **Network API** (`/api/v1/...`): implemented by FinSim. Developers and the CLI call these.
+
+    All mutating calls require an `Idempotency-Key` header.
+    `transactionId` is a business identifier and is never an authentication credential.
+    Every simulated entity carries `provenance: SYNTHETIC`.
+servers:
+  - url: http://localhost:8080
+    description: Local FinSim
+tags:
+  - name: Participant contract
+    description: Implemented by institutions; called by FinSim.
+  - name: Network API
+    description: Implemented by FinSim; called by developers and the CLI.
+
+paths:
+  /finsim/v1/institution/health:
+    get:
+      tags: [Participant contract]
+      operationId: getHealth
+      summary: Liveness and readiness of the institution.
+      responses:
+        "200":
+          description: Institution is healthy.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+
+  /finsim/v1/institution/capabilities:
+    get:
+      tags: [Participant contract]
+      operationId: getCapabilities
+      summary: Operations this institution supports. FinSim routes only to declared capabilities.
+      responses:
+        "200":
+          description: Declared capabilities.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Capabilities" }
+
+  /finsim/v1/payments:
+    post:
+      tags: [Participant contract]
+      operationId: createPaymentLeg
+      summary: Apply one leg (debit or credit) of a payment at this institution.
+      description: |
+        FinSim sends a DEBIT to the source institution and a CREDIT to the destination institution.
+        The same `Idempotency-Key` with the same body returns the original response.
+        The same key with a different body returns 409.
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentLegRequest" }
+      responses:
+        "200":
+          description: Replay of an earlier identical request; original result returned.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentLegResult" }
+        "201":
+          description: Leg processed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentLegResult" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/IdempotencyConflict"
+        "422":
+          description: Business rejection (for example account closed). Body carries a reason code.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /finsim/v1/payments/{transactionId}:
+    get:
+      tags: [Participant contract]
+      operationId: getPaymentLeg
+      summary: Status of a leg. FinSim uses this to resolve UNKNOWN outcomes.
+      parameters:
+        - $ref: "#/components/parameters/TransactionId"
+        - name: leg
+          in: query
+          required: true
+          schema: { $ref: "#/components/schemas/Direction" }
+      responses:
+        "200":
+          description: Current state of the leg.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentLegResult" }
+        "404":
+          description: The institution has no record of this leg (it never arrived).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/networks/{networkId}/transfers:
+    post:
+      tags: [Network API]
+      operationId: createTransfer
+      summary: Start a transfer between two institutions on a network.
+      parameters:
+        - name: networkId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TransferRequest" }
+      responses:
+        "201":
+          description: Transfer accepted for processing.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transfer" }
+        "200":
+          description: Replay of an earlier identical request.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transfer" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/IdempotencyConflict"
+
+  /api/v1/transfers/{transactionId}:
+    get:
+      tags: [Network API]
+      operationId: getTransfer
+      summary: Current state of a transfer, including stage history.
+      parameters:
+        - $ref: "#/components/parameters/TransactionId"
+      responses:
+        "200":
+          description: The transfer.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transfer" }
+        "404":
+          description: Unknown transaction.
+
+  /api/v1/transfers/{transactionId}/trace:
+    get:
+      tags: [Network API]
+      operationId: getTrace
+      summary: Every stage, outbound call, and injected fault for a transfer.
+      parameters:
+        - $ref: "#/components/parameters/TransactionId"
+      responses:
+        "200":
+          description: The trace.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Trace" }
+
+  /api/v1/transfers/{transactionId}/resolve:
+    post:
+      tags: [Network API]
+      operationId: resolveTransfer
+      summary: Query the institutions and resolve an UNKNOWN transfer.
+      description: Only valid while the transfer is UNKNOWN. Retrying the transfer itself is blocked until this succeeds.
+      parameters:
+        - $ref: "#/components/parameters/TransactionId"
+      responses:
+        "200":
+          description: Transfer after resolution.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transfer" }
+        "409":
+          description: Transfer is not UNKNOWN.
+
+  /api/v1/faults:
+    post:
+      tags: [Network API]
+      operationId: addFault
+      summary: Add a fault rule on calls from FinSim to a participant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FaultRule" }
+      responses:
+        "201":
+          description: Rule created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FaultRule" }
+    get:
+      tags: [Network API]
+      operationId: listFaults
+      summary: List active fault rules.
+      responses:
+        "200":
+          description: Active rules.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/FaultRule" }
+
+  /api/v1/faults/{faultId}:
+    delete:
+      tags: [Network API]
+      operationId: removeFault
+      summary: Remove a fault rule.
+      parameters:
+        - name: faultId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Removed.
+
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-chosen unique key. Same key and same body returns the original response; same key and different body returns 409.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      description: Business identifier. Not an authentication credential.
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: Invalid or missing fields, or a missing Idempotency-Key.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    IdempotencyConflict:
+      description: The Idempotency-Key was used with a different request body.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Provenance:
+      type: string
+      enum: [SYNTHETIC]
+      description: Always SYNTHETIC. FinSim never handles real funds or real data.
+
+    Direction:
+      type: string
+      enum: [DEBIT, CREDIT]
+
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{1,8})?$'
+          description: Decimal string. Never a floating-point number.
+          examples: ["100.00"]
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          examples: [USD]
+
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [UP, DEGRADED, DOWN] }
+        contractVersions:
+          type: array
+          items: { type: string, examples: ["finsim/v1"] }
+
+    Capabilities:
+      type: object
+      required: [institutionType, capabilities]
+      properties:
+        institutionType: { type: string, enum: [BANK, MERCHANT, PAYMENT_GATEWAY, CUSTOM] }
+        capabilities:
+          type: array
+          items: { type: string, enum: [ACCOUNT_DEBIT, ACCOUNT_CREDIT, STATUS_QUERY] }
+        currencies:
+          type: array
+          items: { type: string }
+
+    PaymentLegRequest:
+      type: object
+      required: [transactionId, direction, accountReference, money, reference, provenance]
+      properties:
+        transactionId: { type: string }
+        direction: { $ref: "#/components/schemas/Direction" }
+        accountReference: { type: string, examples: [ACC-1] }
+        money: { $ref: "#/components/schemas/Money" }
+        reference: { type: string, maxLength: 140, description: End-to-end reference supplied by the originator. }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    LegStatus:
+      type: string
+      enum: [ACCEPTED, COMPLETED, REJECTED]
+      description: |
+        The participant reports only what it knows. UNKNOWN is never reported by a participant;
+        FinSim assigns it when a call times out.
+
+    PaymentLegResult:
+      type: object
+      required: [transactionId, direction, status, provenance]
+      properties:
+        transactionId: { type: string }
+        direction: { $ref: "#/components/schemas/Direction" }
+        status: { $ref: "#/components/schemas/LegStatus" }
+        reasonCode: { type: string, description: Required when status is REJECTED. See reason-code list. }
+        participantReference: { type: string, description: Institution's own id for the leg. }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    TransferRequest:
+      type: object
+      required: [from, to, money, reference]
+      properties:
+        from: { $ref: "#/components/schemas/AccountRef" }
+        to: { $ref: "#/components/schemas/AccountRef" }
+        money: { $ref: "#/components/schemas/Money" }
+        reference: { type: string, maxLength: 140 }
+
+    AccountRef:
+      type: object
+      required: [institutionId, accountReference]
+      properties:
+        institutionId: { type: string, examples: [bank-a] }
+        accountReference: { type: string, examples: [ACC-1] }
+
+    TransferState:
+      type: string
+      enum: [CREATED, ACCEPTED, IN_PROGRESS, COMPLETED, REJECTED, UNKNOWN]
+      description: |
+        COMPLETED and REJECTED are terminal. UNKNOWN is not terminal: it must be resolved
+        via the resolve endpoint before the transfer can be retried.
+
+    Transfer:
+      type: object
+      required: [transactionId, state, money, from, to, provenance]
+      properties:
+        transactionId: { type: string }
+        state: { $ref: "#/components/schemas/TransferState" }
+        currentStage: { type: string, examples: [credit_destination] }
+        reasonCode: { type: string }
+        emittedBy: { type: string, enum: [FINSIM, SOURCE, DESTINATION] }
+        from: { $ref: "#/components/schemas/AccountRef" }
+        to: { $ref: "#/components/schemas/AccountRef" }
+        money: { $ref: "#/components/schemas/Money" }
+        reference: { type: string }
+        stageHistory:
+          type: array
+          items: { $ref: "#/components/schemas/StageEntry" }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    StageEntry:
+      type: object
+      required: [stage, outcome, at]
+      properties:
+        stage: { type: string, examples: [debit_source] }
+        outcome: { type: string, enum: [PASSED, FAILED, UNKNOWN] }
+        at: { type: string, format: date-time }
+
+    Trace:
+      type: object
+      required: [transactionId, events]
+      properties:
+        transactionId: { type: string }
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/TraceEvent" }
+
+    TraceEvent:
+      type: object
+      required: [at, kind]
+      properties:
+        at: { type: string, format: date-time }
+        kind: { type: string, enum: [STAGE, OUTBOUND_CALL, FAULT_INJECTED, STATE_CHANGE] }
+        stage: { type: string }
+        target: { type: string, description: Institution called. }
+        request: { type: object, additionalProperties: true }
+        response: { type: object, additionalProperties: true }
+        durationMs: { type: integer }
+        faultId: { type: string }
+        fromState: { $ref: "#/components/schemas/TransferState" }
+        toState: { $ref: "#/components/schemas/TransferState" }
+
+    FaultRule:
+      type: object
+      required: [target, type]
+      properties:
+        faultId: { type: string, readOnly: true }
+        target: { type: string, description: Institution id the rule applies to. }
+        type: { type: string, enum: [DELAY, TIMEOUT, DUPLICATE_DELIVERY] }
+        delayMs: { type: integer, minimum: 0, description: Used by DELAY. }
+        probability: { type: number, minimum: 0, maximum: 1, default: 1 }
+        times: { type: integer, minimum: 1, description: Optional cap on how many calls the rule affects. }
+        seed: { type: integer, description: Makes probabilistic faults reproducible. }
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Machine-readable code. Rejections use ISO 20022-style reason codes where one exists.
+          examples: [AC04, AM04, DUPL, RECONCILIATION_REQUIRED, IDEMPOTENCY_CONFLICT]
+        message: { type: string }
+        stage: { type: string }
+        emittedBy: { type: string, enum: [FINSIM, SOURCE, DESTINATION] }
+        traceId: { type: string }
