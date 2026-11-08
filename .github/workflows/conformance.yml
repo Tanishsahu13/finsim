@@ -28,9 +28,11 @@ jobs:
 
       - name: Install Hurl
         run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2
           VERSION=$(curl -fsS https://api.github.com/repos/Orange-OpenSource/hurl/releases/latest | grep '"tag_name"' | cut -d '"' -f4)
           curl -fsSLO "https://github.com/Orange-OpenSource/hurl/releases/download/${VERSION}/hurl_${VERSION}_amd64.deb"
-          sudo dpkg -i "hurl_${VERSION}_amd64.deb"
+          sudo apt-get install -y "./hurl_${VERSION}_amd64.deb"
           hurl --version
 
       - name: Start the Java sample bank
@@ -42,11 +44,14 @@ jobs:
             fi
             sleep 2
           done
-          echo "bank did not start"; cat bank.log; exit 1
+          echo "bank did not start"; [ -f bank.log ] && cat bank.log; exit 1
 
       - name: Run the conformance suite
         run: scripts/conformance.sh http://localhost:9001
 
       - name: Show the bank log on failure
         if: failure()
-        run: cat bank.log
+        run: |
+          if [ -f bank.log ]; then
+            cat bank.log
+          fi
