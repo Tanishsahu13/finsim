@@ -30,6 +30,7 @@ public enum ReasonCode {
   FINSIM_TIMEOUT("FINSIM_TIMEOUT", "FinSim outbound call timed out", false),
   CAPABILITY_NOT_SUPPORTED(
       "CAPABILITY_NOT_SUPPORTED", "Institution lacks declared capability for leg", false),
+  ROUTING_ERROR("ROUTING_ERROR", "Institution or currency not routable on network", false),
   INVALID_ACCOUNT(
       "INVALID_ACCOUNT", "Source and destination accounts must not be identical", false);
 

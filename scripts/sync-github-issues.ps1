@@ -1,4 +1,4 @@
-﻿# Sync/Update GitHub issues #11 through #20 with clean drafts
+# Sync/Update GitHub issues #11 through #20 with clean drafts
 #
 # Usage:
 #   # Preview changes (dry-run):
@@ -456,3 +456,4 @@ foreach ($num in ($issueUpdates.Keys | Sort-Object)) {
         Write-Error $_.Exception.Message
     }
 }
+

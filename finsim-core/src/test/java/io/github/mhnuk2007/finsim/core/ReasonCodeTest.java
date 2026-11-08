@@ -25,6 +25,7 @@ class ReasonCodeTest {
   void testFinSimSpecificCodes() {
     assertThat(ReasonCode.FINSIM_TIMEOUT.isIso20022()).isFalse();
     assertThat(ReasonCode.CAPABILITY_NOT_SUPPORTED.isIso20022()).isFalse();
+    assertThat(ReasonCode.ROUTING_ERROR.isIso20022()).isFalse();
     assertThat(ReasonCode.INVALID_ACCOUNT.isIso20022()).isFalse();
   }
 

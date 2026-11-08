@@ -1,0 +1,16 @@
+package io.github.mhnuk2007.finsim.transfer.internal;
+
+import java.time.Clock;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration(proxyBeanMethods = false)
+public class TransferConfiguration {
+
+  @Bean
+  @ConditionalOnMissingBean
+  public Clock clock() {
+    return Clock.systemUTC();
+  }
+}
