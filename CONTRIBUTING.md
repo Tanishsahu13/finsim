@@ -59,8 +59,8 @@ Copy `docs/adr/0000-template.md`, describe the context, the decision, and the al
 
 | Label | Meaning |
 |---|---|
-| `good first issue` | Small, well-scoped, mentored (see [docs/good-first-issues.md](docs/good-first-issues.md)) |
-| `help wanted` | Maintainers would love a contributor here |
+| [`good first issue`](https://github.com/mhnuk2007/finsim/labels/good%20first%20issue) | Small, well-scoped, mentored (see [docs/good-first-issues.md](docs/good-first-issues.md)) |
+| [`help wanted`](https://github.com/mhnuk2007/finsim/labels/help%20wanted) | Intermediate community tasks (sample banks, tooling) |
 | `roadmap` | Planned work from `docs/roadmap.md` |
 | `needs-design` | Needs discussion or an ADR before coding |
 | `bug`, `docs`, `question` | As expected |
