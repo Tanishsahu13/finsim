@@ -115,6 +115,6 @@ Check health, capabilities, debit and credit, idempotent replay, idempotency con
 **22. Docs pass** `[milestone-1]` `[docs]` `[in-progress]`
 Keep `docs/quickstart.md`, `docs/database.md`, `docs/registry.md`, `docs/contract-v1.md`, and `README.md` synchronized with the actual codebase capabilities.
 
-**23. Name and launch checks** `[milestone-1]`
-Name search, `SECURITY` contact, Code of Conduct file, issue and PR templates, labeled good first issues.
-*Done when:* maintainer checklist in GOVERNANCE.md is satisfied.
+**23. Name and launch checks** `[milestone-1]` `[partially-done]`
+Name search, `SECURITY` contact, Code of Conduct file, issue and PR templates, 10 labeled good first issues.
+*Status:* 10 curated good first issues published on GitHub (#11 through #20) and documented in `docs/good-first-issues.md`. Issue and PR templates active. Maintainer governance checklist in progress.

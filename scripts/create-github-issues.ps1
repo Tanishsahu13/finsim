@@ -1,4 +1,4 @@
-﻿# Create Good First Issues on GitHub repository: mhnuk2007/finsim
+# Create Good First Issues on GitHub repository: mhnuk2007/finsim
 #
 # Usage:
 #   # Preview issues to be created (dry-run):
@@ -278,3 +278,4 @@ foreach ($item in $issues) {
         Write-Error $_.Exception.Message
     }
 }
+

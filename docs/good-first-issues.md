@@ -264,3 +264,4 @@ Every pull request must have spotless formatting (`./gradlew spotlessCheck`), pa
 #### Acceptance Criteria ("Done when")
 - Both `scripts/verify.sh` and `scripts/verify.ps1` run successfully on a clean workspace.
 - Clear error messages explain how to fix failed steps (e.g. `Run ./gradlew spotlessApply to fix formatting`).
+
