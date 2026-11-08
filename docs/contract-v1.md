@@ -31,6 +31,12 @@ FinSim never reads or writes your database. It only knows what your institution 
 | `GET /api/v1/transfers/{transactionId}/trace` | Every stage, call, and injected fault |
 | `POST /api/v1/transfers/{transactionId}/resolve` | Resolve an `UNKNOWN` transfer |
 | `POST/GET /api/v1/faults`, `DELETE /api/v1/faults/{faultId}` | Manage fault rules |
+| `POST /api/v1/institutions` | Register an institution (see [docs/registry.md](registry.md)) |
+| `GET /api/v1/institutions` | List registered institutions |
+| `GET /api/v1/institutions/{id}` | Inspect an institution |
+| `GET /api/v1/networks` | List networks |
+| `GET /api/v1/networks/{networkId}` | Inspect a network and its member institutions |
+| `POST /api/v1/networks/{networkId}/members` | Join an institution to a network |
 
 ## Rules that always apply
 

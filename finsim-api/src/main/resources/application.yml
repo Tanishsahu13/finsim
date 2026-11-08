@@ -2,7 +2,7 @@ spring:
   application:
     name: finsim
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/finsim}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/finsim}
     username: ${SPRING_DATASOURCE_USERNAME:finsim}
     password: ${SPRING_DATASOURCE_PASSWORD:finsim}
     driver-class-name: org.postgresql.Driver

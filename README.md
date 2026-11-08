@@ -39,22 +39,40 @@ Timeouts, duplicate requests, and uncertain outcomes are the hardest parts of pa
 | Milestone 3: disputes, reconciliation, scenario replay | Planned |
 | Clearing, RTGS, FX, screening, ISO 20022, billers, fees | Roadmap (help wanted) |
 
-## Quickstart (target experience for milestone 1)
+## Quickstart
 
-Full walkthrough: [docs/quickstart.md](docs/quickstart.md).
+See [docs/quickstart.md](docs/quickstart.md) for the full step-by-step walkthrough.
 
-> These commands describe what milestone 1 will deliver. They will work when the milestone is marked done.
+### Try the running platform today
+
+You can run PostgreSQL, the FinSim API, the Java sample banks, and the CLI right now:
 
 ```bash
-git clone https://github.com/mhnuk2007/finsim.git
-cd finsim
-docker compose -f deploy/docker-compose.yml up
+# 1. Start PostgreSQL 17
+docker compose -f deploy/docker-compose.yml up -d
 
-# in another terminal
+# 2. Start the FinSim API (port 8080)
+./gradlew :finsim-api:bootRun
+
+# 3. In separate terminals, start Bank A (port 9001) and Bank B (port 9002)
+./gradlew :sample-bank-java:bootRun
+./gradlew :sample-bank-java:bootRun --args="--spring.profiles.active=bank-b"
+
+# 4. Query seeded institutions and the sandbox network using the CLI
+./gradlew :finsim-cli:run --args="institutions"
+./gradlew :finsim-cli:run --args="networks --id sandbox"
+```
+
+### Target payments experience (Milestone 1)
+
+Transfer orchestration and fault injection commands will connect these components end to end:
+
+```bash
+# Execute payment across institutions
 finsim transfer --network sandbox --from bank-a:ACC-1 --to bank-b:ACC-2 --amount 100.00 --currency USD
 finsim trace <transactionId>
 
-# inject a timeout on bank-b and try again
+# Inject a timeout on bank-b and observe UNKNOWN state
 finsim fault add --target bank-b --type TIMEOUT
 finsim transfer ...        # ends in UNKNOWN, not FAILED
 ```
