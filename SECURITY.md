@@ -6,6 +6,10 @@ FinSim is a synthetic testing environment. It must never handle real funds, real
 
 FinSim is pre-alpha. Only the `main` branch is supported.
 
+## Deployment Boundary (Local Sandbox Only)
+
+The platform API and registry administrative endpoints have **no authentication**. FinSim is designed strictly as a local development and testing sandbox and is **not safe to expose to the public internet** or untrusted networks. Deployments should remain restricted to `localhost` or isolated, non-routable simulation environments.
+
 ## Reporting a vulnerability
 
 Please **do not** open a public issue.

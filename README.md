@@ -90,6 +90,7 @@ finsim transfer ...        # ends in UNKNOWN, not FAILED
 - Not connected to real sanctions lists, FX feeds, or regulators.
 - Not a certification of conformance to any real payment scheme.
 - Not a place where uploaded code runs inside the FinSim API process.
+- Not safe to expose to the public internet: the platform and registry APIs have no authentication and are designed strictly for local simulation.
 
 ## Contributing
 
