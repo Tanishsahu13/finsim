@@ -60,7 +60,7 @@ jobs:
           echo "bank did not start"; [ -f bank.log ] && cat bank.log; exit 1
 
       - name: Run the conformance suite
-        run: scripts/conformance.sh http://localhost:9001
+        run: bash scripts/conformance.sh http://localhost:9001
 
       - name: Show the bank log on failure
         if: failure()
