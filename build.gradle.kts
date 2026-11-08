@@ -36,6 +36,10 @@ subprojects {
     }
   }
 
+  tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-parameters")
+  }
+
   // Code formatting
   extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     java {

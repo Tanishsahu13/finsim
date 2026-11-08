@@ -10,11 +10,11 @@ import java.util.Objects;
 /**
  * The Transfer aggregate root.
  *
- * <p>Enforces state machine invariants, idempotency key validity, positive money amounts,
- * distinct source and destination accounts, and an append-only stage history.
+ * <p>Enforces state machine invariants, idempotency key validity, positive money amounts, distinct
+ * source and destination accounts, and an append-only stage history.
  *
- * <p>This aggregate is strictly deterministic: all timestamp mutations require an explicit
- * {@link Instant} or {@link Clock} parameter.
+ * <p>This aggregate is strictly deterministic: all timestamp mutations require an explicit {@link
+ * Instant} or {@link Clock} parameter.
  */
 public class Transfer {
 
@@ -82,7 +82,8 @@ public class Transfer {
   }
 
   /**
-   * Creates a new Transfer in the {@link TransferState#CREATED} state with an explicit creation timestamp.
+   * Creates a new Transfer in the {@link TransferState#CREATED} state with an explicit creation
+   * timestamp.
    */
   public static Transfer create(
       String id,
@@ -96,7 +97,8 @@ public class Transfer {
     Objects.requireNonNull(createdAt, "createdAt timestamp must not be null");
     validateCreationParameters(id, networkId, idempotencyKey, from, to, money, reference);
 
-    StageEntry initialStage = StageEntry.of("created", StageOutcome.PASSED, createdAt, "Transfer created");
+    StageEntry initialStage =
+        StageEntry.of("created", StageOutcome.PASSED, createdAt, "Transfer created");
     List<StageEntry> initialHistory = List.of(initialStage);
 
     return new Transfer(
@@ -120,9 +122,7 @@ public class Transfer {
         0L);
   }
 
-  /**
-   * Creates a new Transfer using the provided {@link Clock}.
-   */
+  /** Creates a new Transfer using the provided {@link Clock}. */
   public static Transfer create(
       String id,
       String networkId,
@@ -232,9 +232,7 @@ public class Transfer {
     }
   }
 
-  /**
-   * Accepts this transfer for network processing. Transitions {@code CREATED -> ACCEPTED}.
-   */
+  /** Accepts this transfer for network processing. Transitions {@code CREATED -> ACCEPTED}. */
   public synchronized void accept(String stage, Instant at) {
     Objects.requireNonNull(at, "timestamp must not be null");
     transitionTo(TransferState.ACCEPTED);
@@ -254,9 +252,7 @@ public class Transfer {
     this.stageHistory.add(StageEntry.of(stage, StageOutcome.PASSED, at));
   }
 
-  /**
-   * Completes the transfer. Transitions to terminal state {@code COMPLETED}.
-   */
+  /** Completes the transfer. Transitions to terminal state {@code COMPLETED}. */
   public synchronized void complete(String stage, Instant at) {
     Objects.requireNonNull(at, "timestamp must not be null");
     transitionTo(TransferState.COMPLETED);
@@ -270,7 +266,8 @@ public class Transfer {
    * Rejects the transfer. Transitions to terminal state {@code REJECTED}.
    *
    * @param stage stage name
-   * @param reasonCode rejection reason code (must not be null or blank, and cannot be an API error code)
+   * @param reasonCode rejection reason code (must not be null or blank, and cannot be an API error
+   *     code)
    * @param emittedBy who rejected the transfer (must not be null)
    * @param details optional additional details
    * @param at timestamp
@@ -284,7 +281,8 @@ public class Transfer {
     }
     if (ApiErrorCode.find(reasonCode).isPresent()) {
       throw new IllegalArgumentException(
-          "API error code '%s' cannot be used as a transfer rejection reason code".formatted(reasonCode));
+          "API error code '%s' cannot be used as a transfer rejection reason code"
+              .formatted(reasonCode));
     }
     Objects.requireNonNull(emittedBy, "emittedBy must not be null for REJECTED state");
 
@@ -308,16 +306,19 @@ public class Transfer {
     reject(stage, reasonCode.code(), emittedBy, details, at);
   }
 
-  public synchronized void reject(String stage, ReasonCode reasonCode, Emitter emittedBy, Instant at) {
+  public synchronized void reject(
+      String stage, ReasonCode reasonCode, Emitter emittedBy, Instant at) {
     Objects.requireNonNull(reasonCode, "reasonCode must not be null");
     reject(stage, reasonCode.code(), emittedBy, null, at);
   }
 
-  /**
-   * Marks the transfer outcome as ambiguous due to a timeout. Transitions to {@code UNKNOWN}.
-   */
+  /** Marks the transfer outcome as ambiguous due to a timeout. Transitions to {@code UNKNOWN}. */
   public synchronized void markUnknown(
-      String stage, PendingAction pendingAction, boolean needsManualReview, String details, Instant at) {
+      String stage,
+      PendingAction pendingAction,
+      boolean needsManualReview,
+      String details,
+      Instant at) {
     Objects.requireNonNull(at, "timestamp must not be null");
     transitionTo(TransferState.UNKNOWN);
     this.currentStage = stage;
@@ -337,7 +338,8 @@ public class Transfer {
   }
 
   /**
-   * Updates resolution status (pending action and manual review flag) while in the {@code UNKNOWN} state.
+   * Updates resolution status (pending action and manual review flag) while in the {@code UNKNOWN}
+   * state.
    */
   public synchronized void updateResolutionStatus(
       PendingAction pendingAction, boolean needsManualReview, Instant at) {
@@ -352,10 +354,9 @@ public class Transfer {
     this.updatedAt = at;
   }
 
-  /**
-   * Appends an entry to the stage history without altering the transfer state.
-   */
-  public synchronized void recordStage(String stage, StageOutcome outcome, String details, Instant at) {
+  /** Appends an entry to the stage history without altering the transfer state. */
+  public synchronized void recordStage(
+      String stage, StageOutcome outcome, String details, Instant at) {
     Objects.requireNonNull(stage, "stage must not be null");
     Objects.requireNonNull(outcome, "outcome must not be null");
     Objects.requireNonNull(at, "timestamp must not be null");
@@ -372,9 +373,7 @@ public class Transfer {
     this.version++;
   }
 
-  /**
-   * Performs and validates state transition.
-   */
+  /** Performs and validates state transition. */
   private void transitionTo(TransferState targetState) {
     if (!this.state.canTransitionTo(targetState)) {
       throw new IllegalStateTransitionException(this.id, this.state, targetState);
@@ -436,9 +435,7 @@ public class Transfer {
     return needsManualReview;
   }
 
-  /**
-   * Returns an unmodifiable view of the append-only stage history.
-   */
+  /** Returns an unmodifiable view of the append-only stage history. */
   public synchronized List<StageEntry> getStageHistory() {
     return Collections.unmodifiableList(new ArrayList<>(stageHistory));
   }
@@ -474,18 +471,34 @@ public class Transfer {
   @Override
   public synchronized String toString() {
     return "Transfer{"
-        + "id='" + id + '\''
-        + ", networkId='" + networkId + '\''
-        + ", state=" + state
-        + ", currentStage='" + currentStage + '\''
-        + ", from=" + from
-        + ", to=" + to
-        + ", money=" + money
-        + ", reasonCode='" + reasonCode + '\''
-        + ", emittedBy=" + emittedBy
-        + ", pendingAction=" + pendingAction
-        + ", needsManualReview=" + needsManualReview
-        + ", stages=" + stageHistory.size()
+        + "id='"
+        + id
+        + '\''
+        + ", networkId='"
+        + networkId
+        + '\''
+        + ", state="
+        + state
+        + ", currentStage='"
+        + currentStage
+        + '\''
+        + ", from="
+        + from
+        + ", to="
+        + to
+        + ", money="
+        + money
+        + ", reasonCode='"
+        + reasonCode
+        + '\''
+        + ", emittedBy="
+        + emittedBy
+        + ", pendingAction="
+        + pendingAction
+        + ", needsManualReview="
+        + needsManualReview
+        + ", stages="
+        + stageHistory.size()
         + '}';
   }
 }

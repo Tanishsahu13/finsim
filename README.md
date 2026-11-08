@@ -29,7 +29,11 @@ Timeouts, duplicate requests, and uncertain outcomes are the hardest parts of pa
 | Capability | Status |
 |---|---|
 | Design: architecture spec, requirements, contract sketch | Done (see `docs/`) |
-| Build scaffold: Gradle modules, CI, module-boundary checks, CLI skeleton | Done (initial commit) |
+| Build scaffold: Gradle modules, CI, module-boundary checks, CLI skeleton | Done |
+| Database baseline: PostgreSQL + Flyway migrations, Testcontainers | Done |
+| Transfer domain: aggregate root, state machine, append-only history | Done |
+| Institution registry: registration, static sandbox network, seed data, CLI | Done |
+| Sample bank (Java): in-memory bank implementing participant contract | Done (`samples/bank-java`) |
 | Milestone 1: two sample banks, `finsim/v1` minimal contract, payment state machine with `UNKNOWN`, fault injection, `finsim trace`, `finsim verify` | In progress |
 | Milestone 2: card authorize/capture/refund, virtual clock, ledger | Planned |
 | Milestone 3: disputes, reconciliation, scenario replay | Planned |

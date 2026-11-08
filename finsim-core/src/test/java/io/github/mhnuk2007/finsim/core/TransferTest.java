@@ -20,7 +20,14 @@ class TransferTest {
 
   private Transfer createStandardTransfer() {
     return Transfer.create(
-        "tx-123", "sandbox", "idemp-key-12345", SOURCE, DEST, AMOUNT, "Payment reference", BASE_TIME);
+        "tx-123",
+        "sandbox",
+        "idemp-key-12345",
+        SOURCE,
+        DEST,
+        AMOUNT,
+        "Payment reference",
+        BASE_TIME);
   }
 
   @Nested
@@ -79,7 +86,14 @@ class TransferTest {
       assertThatThrownBy(
               () ->
                   Transfer.create(
-                      "tx-1", "sandbox", "idemp-key-001", SOURCE, DEST, AMOUNT, "Ref", (Instant) null))
+                      "tx-1",
+                      "sandbox",
+                      "idemp-key-001",
+                      SOURCE,
+                      DEST,
+                      AMOUNT,
+                      "Ref",
+                      (Instant) null))
           .isInstanceOf(NullPointerException.class)
           .hasMessageContaining("timestamp must not be null");
     }
@@ -104,11 +118,13 @@ class TransferTest {
     void rejectsInvalidNetworkId() {
       assertThatThrownBy(
               () ->
-                  Transfer.create("tx-1", null, "idemp-key-001", SOURCE, DEST, AMOUNT, "Ref", BASE_TIME))
+                  Transfer.create(
+                      "tx-1", null, "idemp-key-001", SOURCE, DEST, AMOUNT, "Ref", BASE_TIME))
           .isInstanceOf(NullPointerException.class);
       assertThatThrownBy(
               () ->
-                  Transfer.create("tx-1", " ", "idemp-key-001", SOURCE, DEST, AMOUNT, "Ref", BASE_TIME))
+                  Transfer.create(
+                      "tx-1", " ", "idemp-key-001", SOURCE, DEST, AMOUNT, "Ref", BASE_TIME))
           .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -116,7 +132,8 @@ class TransferTest {
     @DisplayName("Rejects idempotency key with length outside 8..128")
     void rejectsInvalidIdempotencyKey() {
       assertThatThrownBy(
-              () -> Transfer.create("tx-1", "sandbox", null, SOURCE, DEST, AMOUNT, "Ref", BASE_TIME))
+              () ->
+                  Transfer.create("tx-1", "sandbox", null, SOURCE, DEST, AMOUNT, "Ref", BASE_TIME))
           .isInstanceOf(NullPointerException.class);
       assertThatThrownBy(
               () ->
@@ -150,7 +167,14 @@ class TransferTest {
       assertThatThrownBy(
               () ->
                   Transfer.create(
-                      "tx-1", "sandbox", "idemp-key-001", sameAccount, sameAccount, AMOUNT, "Ref", BASE_TIME))
+                      "tx-1",
+                      "sandbox",
+                      "idemp-key-001",
+                      sameAccount,
+                      sameAccount,
+                      AMOUNT,
+                      "Ref",
+                      BASE_TIME))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("must not be identical");
     }
@@ -281,7 +305,12 @@ class TransferTest {
       Transfer transfer = createStandardTransfer();
 
       transfer.accept("validation", BASE_TIME.plusSeconds(1));
-      transfer.reject("route_check", ReasonCode.MS03, Emitter.FINSIM, "Routing failed", BASE_TIME.plusSeconds(2));
+      transfer.reject(
+          "route_check",
+          ReasonCode.MS03,
+          Emitter.FINSIM,
+          "Routing failed",
+          BASE_TIME.plusSeconds(2));
       assertThat(transfer.getState()).isEqualTo(TransferState.REJECTED);
     }
 
@@ -293,7 +322,11 @@ class TransferTest {
       transfer.accept("validation", BASE_TIME.plusSeconds(1));
       transfer.startProcessing("debit_source", BASE_TIME.plusSeconds(2));
       transfer.reject(
-          "debit_source", ReasonCode.AM04, Emitter.SOURCE, "Insufficient funds", BASE_TIME.plusSeconds(3));
+          "debit_source",
+          ReasonCode.AM04,
+          Emitter.SOURCE,
+          "Insufficient funds",
+          BASE_TIME.plusSeconds(3));
 
       assertThat(transfer.getState()).isEqualTo(TransferState.REJECTED);
       assertThat(transfer.getReasonCode()).isEqualTo("AM04");
@@ -331,7 +364,8 @@ class TransferTest {
 
       transfer.accept("validation", BASE_TIME.plusSeconds(1));
       transfer.startProcessing("debit_source", BASE_TIME.plusSeconds(2));
-      transfer.markUnknown("debit_source", PendingAction.NONE, false, "Timeout on debit", BASE_TIME.plusSeconds(3));
+      transfer.markUnknown(
+          "debit_source", PendingAction.NONE, false, "Timeout on debit", BASE_TIME.plusSeconds(3));
 
       // Query determines debit was never applied (404)
       transfer.reject(
@@ -348,7 +382,8 @@ class TransferTest {
 
       transfer.accept("validation", BASE_TIME.plusSeconds(1));
       transfer.startProcessing("credit_destination", BASE_TIME.plusSeconds(2));
-      transfer.markUnknown("credit_destination", PendingAction.RETRY_CREDIT, BASE_TIME.plusSeconds(3));
+      transfer.markUnknown(
+          "credit_destination", PendingAction.RETRY_CREDIT, BASE_TIME.plusSeconds(3));
 
       // Resolve starts retry
       transfer.startProcessing("retry_credit", BASE_TIME.plusSeconds(4));
@@ -366,7 +401,8 @@ class TransferTest {
 
       transfer.accept("validation", BASE_TIME.plusSeconds(1));
       transfer.startProcessing("credit_destination", BASE_TIME.plusSeconds(2));
-      transfer.markUnknown("credit_destination", PendingAction.REVERSE_DEBIT, BASE_TIME.plusSeconds(3));
+      transfer.markUnknown(
+          "credit_destination", PendingAction.REVERSE_DEBIT, BASE_TIME.plusSeconds(3));
 
       // Reversal starts
       transfer.startProcessing("reverse_debit", BASE_TIME.plusSeconds(4));
@@ -391,7 +427,8 @@ class TransferTest {
 
       transfer.accept("validation", BASE_TIME.plusSeconds(1));
       transfer.startProcessing("credit_destination", BASE_TIME.plusSeconds(2));
-      transfer.markUnknown("credit_destination", PendingAction.RETRY_CREDIT, BASE_TIME.plusSeconds(3));
+      transfer.markUnknown(
+          "credit_destination", PendingAction.RETRY_CREDIT, BASE_TIME.plusSeconds(3));
 
       // Re-send credit
       transfer.startProcessing("retry_credit", BASE_TIME.plusSeconds(4));
@@ -399,7 +436,11 @@ class TransferTest {
 
       // Re-send credit times out again
       transfer.markUnknown(
-          "retry_credit", PendingAction.RETRY_CREDIT, false, "Second timeout", BASE_TIME.plusSeconds(5));
+          "retry_credit",
+          PendingAction.RETRY_CREDIT,
+          false,
+          "Second timeout",
+          BASE_TIME.plusSeconds(5));
       assertThat(transfer.getState()).isEqualTo(TransferState.UNKNOWN);
     }
   }
@@ -560,7 +601,8 @@ class TransferTest {
     }
 
     @Test
-    @DisplayName("Reject refuses API error codes (e.g. IDEMPOTENCY_CONFLICT, RECONCILIATION_REQUIRED)")
+    @DisplayName(
+        "Reject refuses API error codes (e.g. IDEMPOTENCY_CONFLICT, RECONCILIATION_REQUIRED)")
     void rejectsApiErrorCodesAsRejectionReason() {
       Transfer transfer = createStandardTransfer();
 

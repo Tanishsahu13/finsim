@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
  * <p>Every rejection of a transfer must carry a reason code and indicate which entity emitted it
  * (FINSIM, SOURCE, or DESTINATION).
  *
- * <p>API-level HTTP errors (such as {@code IDEMPOTENCY_CONFLICT} or {@code RECONCILIATION_REQUIRED})
- * belong to {@link ApiErrorCode}, not transfer rejection.
+ * <p>API-level HTTP errors (such as {@code IDEMPOTENCY_CONFLICT} or {@code
+ * RECONCILIATION_REQUIRED}) belong to {@link ApiErrorCode}, not transfer rejection.
  */
 public enum ReasonCode {
 

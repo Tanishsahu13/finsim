@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: sample-bank-java
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 9001
+
+# Seeded synthetic data. Run a second instance with: --spring.profiles.active=bank-b
+bank:
+  institution-id: bank-a
+  currencies: [USD]
+  accounts:
+    ACC-1: "1000.00"
+    ACC-2: "250.00"
+    ACC-CLOSED: "0.00"
+  closed-accounts: [ACC-CLOSED]

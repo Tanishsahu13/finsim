@@ -37,7 +37,17 @@ class ReasonCodeTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"AC01", "AC04", "AM02", "AM04", "DUPL", "MS03", "FINSIM_TIMEOUT", "CAPABILITY_NOT_SUPPORTED"})
+  @ValueSource(
+      strings = {
+        "AC01",
+        "AC04",
+        "AM02",
+        "AM04",
+        "DUPL",
+        "MS03",
+        "FINSIM_TIMEOUT",
+        "CAPABILITY_NOT_SUPPORTED"
+      })
   @DisplayName("Known rejection reason codes can be looked up by string")
   void testFindKnownCodes(String code) {
     assertThat(ReasonCode.find(code)).isPresent();

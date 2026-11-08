@@ -18,8 +18,7 @@ public enum ApiErrorCode {
   IDEMPOTENCY_CONFLICT(
       "IDEMPOTENCY_CONFLICT", "The Idempotency-Key was used with a different request body"),
   RECONCILIATION_REQUIRED(
-      "RECONCILIATION_REQUIRED",
-      "Transfer is in UNKNOWN state and must be resolved before retry"),
+      "RECONCILIATION_REQUIRED", "Transfer is in UNKNOWN state and must be resolved before retry"),
   NOT_FOUND("NOT_FOUND", "The requested resource was not found");
 
   private static final Map<String, ApiErrorCode> BY_CODE =
@@ -50,4 +49,3 @@ public enum ApiErrorCode {
     return Optional.ofNullable(BY_CODE.get(code));
   }
 }
-

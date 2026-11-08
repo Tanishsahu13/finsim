@@ -1,0 +1,11 @@
+server:
+  port: 9002
+
+bank:
+  institution-id: bank-b
+  currencies: [USD]
+  accounts:
+    ACC-1: "500.00"
+    ACC-2: "100.00"
+    ACC-CLOSED: "0.00"
+  closed-accounts: [ACC-CLOSED]
