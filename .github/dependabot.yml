@@ -4,7 +4,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "com.diffplug.spotless"
+      - dependency-name: "gradle"
+      - dependency-name: "gradle-wrapper"
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "actions/checkout"
