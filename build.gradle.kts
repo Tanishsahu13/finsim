@@ -1,47 +1,73 @@
+
 plugins {
-    alias(libs.plugins.spotless) apply false
+  alias(libs.plugins.spotless) apply false
 }
 
-val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
+// Resolve version catalog entries at the root project level.
+val springBootBom = libs.spring.boot.dependencies
+val springModulithBom = libs.spring.modulith.bom
+
+// --------------------------------------------------
+// Project-wide configuration
+// --------------------------------------------------
 
 allprojects {
-    group = "io.github.mhnuk2007.finsim"
-    version = "0.1.0-SNAPSHOT"
+  group = "io.github.mhnuk2007.finsim"
+  version = "0.1.0-SNAPSHOT"
 
-    repositories {
-        mavenCentral()
-    }
+  repositories {
+    mavenCentral()
+  }
 }
 
+// --------------------------------------------------
+// Common subproject configuration
+// --------------------------------------------------
+
 subprojects {
-    apply(plugin = "java-library")
-    apply(plugin = "com.diffplug.spotless")
 
-    extensions.configure<JavaPluginExtension> {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
-        }
+  apply(plugin = "java-library")
+  apply(plugin = "com.diffplug.spotless")
+
+  // Java 21
+  extensions.configure<JavaPluginExtension> {
+    toolchain {
+      languageVersion.set(JavaLanguageVersion.of(21))
     }
+  }
 
-    extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-        java {
-            target("src/**/*.java")
-            googleJavaFormat()
-            removeUnusedImports()
-        }
+  // Code formatting
+  extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    java {
+      target("src/**/*.java")
+      googleJavaFormat()
+      removeUnusedImports()
     }
+  }
 
-    tasks.withType<Test> {
-        useJUnitPlatform()
-    }
+  // JUnit 5
+  tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+  }
 
-    dependencies {
-        // Version alignment for every module (Spring Boot BOM also manages JUnit and AssertJ).
-        "implementation"(platform("org.springframework.boot:spring-boot-dependencies:${catalog.findVersion("spring-boot").get()}"))
-        "implementation"(platform("org.springframework.modulith:spring-modulith-bom:${catalog.findVersion("spring-modulith").get()}"))
+  // Shared dependencies
+  dependencies {
 
-        "testImplementation"("org.junit.jupiter:junit-jupiter")
-        "testImplementation"("org.assertj:assertj-core")
-        "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
-    }
+    // Spring Boot BOM
+    add(
+      "implementation",
+      platform(springBootBom)
+    )
+
+    // Spring Modulith BOM
+    add(
+      "implementation",
+      platform(springModulithBom)
+    )
+
+    // Testing
+    add("testImplementation", "org.junit.jupiter:junit-jupiter")
+    add("testImplementation", "org.assertj:assertj-core")
+    add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
+  }
 }
