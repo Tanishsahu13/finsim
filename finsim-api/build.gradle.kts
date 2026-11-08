@@ -23,5 +23,4 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation(libs.archunit.junit5)
-    testRuntimeOnly("com.h2database:h2")
 }

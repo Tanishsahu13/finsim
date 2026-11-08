@@ -7,9 +7,9 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:finsim}
     driver-class-name: org.postgresql.Driver
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
-    open-in-view: false
   flyway:
     enabled: true
     baseline-on-migrate: true
