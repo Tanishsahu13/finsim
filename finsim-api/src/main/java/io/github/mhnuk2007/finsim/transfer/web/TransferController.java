@@ -45,4 +45,11 @@ public class TransferController {
     Transfer transfer = transferService.getTransfer(transactionId);
     return ResponseEntity.ok(TransferResponse.from(transfer));
   }
+
+  @PostMapping("/api/v1/transfers/{transactionId}/resolve")
+  public ResponseEntity<TransferResponse> resolveTransfer(
+      @PathVariable("transactionId") String transactionId) {
+    Transfer resolved = transferService.resolveTransfer(transactionId);
+    return ResponseEntity.ok(TransferResponse.from(resolved));
+  }
 }

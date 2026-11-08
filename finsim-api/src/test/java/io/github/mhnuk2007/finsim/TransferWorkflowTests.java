@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +18,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,16 @@ class TransferWorkflowTests {
         HttpRequest.newBuilder(
                 URI.create("http://localhost:" + port + "/api/v1/transfers/" + transactionId))
             .GET()
+            .build(),
+        BodyHandlers.ofString());
+  }
+
+  private HttpResponse<String> postResolve(String transactionId) throws Exception {
+    return http.send(
+        HttpRequest.newBuilder(
+                URI.create(
+                    "http://localhost:" + port + "/api/v1/transfers/" + transactionId + "/resolve"))
+            .POST(BodyPublishers.noBody())
             .build(),
         BodyHandlers.ofString());
   }
@@ -227,5 +239,255 @@ class TransferWorkflowTests {
     assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("REJECTED");
     assertThat(JsonPath.<String>read(res.body(), "$.reasonCode")).isEqualTo("ROUTING_ERROR");
     assertThat(JsonPath.<String>read(res.body(), "$.emittedBy")).isEqualTo("FINSIM");
+  }
+
+  @Test
+  @DisplayName(
+      "ADR 0001 Row 1: Source debit not found (404) -> rejects with FINSIM_TIMEOUT, emitted by"
+          + " FINSIM")
+  void resolveRow1DebitNotFoundRejectsWithFinSimTimeout() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ROW1");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Debit timeout"));
+
+    HttpResponse<String> createRes = postTransfer("sandbox", key, payload);
+    assertThat(createRes.statusCode()).isEqualTo(201);
+    String txId = JsonPath.read(createRes.body(), "$.transactionId");
+    assertThat(JsonPath.<String>read(createRes.body(), "$.state")).isEqualTo("UNKNOWN");
+
+    when(participantClient.queryLegStatus(eq("http://localhost:9001"), eq(txId), eq("DEBIT")))
+        .thenReturn(Optional.empty());
+
+    HttpResponse<String> resolveRes = postResolve(txId);
+    assertThat(resolveRes.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.state")).isEqualTo("REJECTED");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.reasonCode"))
+        .isEqualTo("FINSIM_TIMEOUT");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.emittedBy")).isEqualTo("FINSIM");
+  }
+
+  @Test
+  @DisplayName(
+      "ADR 0001 Row 2: Source debit REJECTED -> rejects with source reason code, emitted by SOURCE")
+  void resolveRow2DebitRejectedRejectsWithSourceReason() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ROW2");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Debit connection dropped"));
+
+    HttpResponse<String> createRes = postTransfer("sandbox", key, payload);
+    String txId = JsonPath.read(createRes.body(), "$.transactionId");
+
+    when(participantClient.queryLegStatus(eq("http://localhost:9001"), eq(txId), eq("DEBIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "DEBIT", "REJECTED", "AM04", "ref-deb", "SYNTHETIC")));
+
+    HttpResponse<String> resolveRes = postResolve(txId);
+    assertThat(resolveRes.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.state")).isEqualTo("REJECTED");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.reasonCode")).isEqualTo("AM04");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.emittedBy")).isEqualTo("SOURCE");
+  }
+
+  @Test
+  @DisplayName("ADR 0001 Row 3: Both legs COMPLETED -> resolves to COMPLETED")
+  void resolveRow3BothCompletedResolvesToCompleted() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ROW3");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-1"));
+    when(participantClient.applyLeg(eq("http://localhost:9002"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Credit response lost"));
+
+    HttpResponse<String> createRes = postTransfer("sandbox", key, payload);
+    String txId = JsonPath.read(createRes.body(), "$.transactionId");
+    assertThat(JsonPath.<String>read(createRes.body(), "$.state")).isEqualTo("UNKNOWN");
+
+    when(participantClient.queryLegStatus(eq("http://localhost:9001"), eq(txId), eq("DEBIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "DEBIT", "COMPLETED", null, "deb-1", "SYNTHETIC")));
+    when(participantClient.queryLegStatus(eq("http://localhost:9002"), eq(txId), eq("CREDIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "CREDIT", "COMPLETED", null, "cred-1", "SYNTHETIC")));
+
+    HttpResponse<String> resolveRes = postResolve(txId);
+    assertThat(resolveRes.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.state")).isEqualTo("COMPLETED");
+
+    // Idempotent repeated resolve returns 200
+    HttpResponse<String> repeatedResolve = postResolve(txId);
+    assertThat(repeatedResolve.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(repeatedResolve.body(), "$.state")).isEqualTo("COMPLETED");
+  }
+
+  @Test
+  @DisplayName(
+      "ADR 0001 Row 4: Credit not found (404) -> re-sends CREDIT with same key and completes")
+  void resolveRow4CreditNotFoundResendsCreditAndCompletes() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ROW4");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-1"));
+    when(participantClient.applyLeg(eq("http://localhost:9002"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Credit request lost"));
+
+    HttpResponse<String> createRes = postTransfer("sandbox", key, payload);
+    String txId = JsonPath.read(createRes.body(), "$.transactionId");
+
+    when(participantClient.queryLegStatus(eq("http://localhost:9001"), eq(txId), eq("DEBIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "DEBIT", "COMPLETED", null, "deb-1", "SYNTHETIC")));
+    when(participantClient.queryLegStatus(eq("http://localhost:9002"), eq(txId), eq("CREDIT")))
+        .thenReturn(Optional.empty());
+
+    // When re-sending credit, it completes
+    when(participantClient.applyLeg(eq("http://localhost:9002"), eq(txId + "-credit"), any()))
+        .thenReturn(PaymentCallOutcome.completed("cred-resend-ok"));
+
+    HttpResponse<String> resolveRes = postResolve(txId);
+    assertThat(resolveRes.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.state")).isEqualTo("COMPLETED");
+
+    // Verify the same credit idempotency key was used both on original transfer and re-send
+    verify(participantClient, times(2))
+        .applyLeg(
+            eq("http://localhost:9002"),
+            eq(txId + "-credit"),
+            argThat(req -> "CREDIT".equals(req.direction())));
+  }
+
+  @Test
+  @DisplayName(
+      "ADR 0001 Row 5: Credit REJECTED -> executes reversal at source and transitions to REJECTED")
+  void resolveRow5CreditRejectedExecutesReversal() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ROW5");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-1"));
+    when(participantClient.applyLeg(eq("http://localhost:9002"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Credit timeout"));
+
+    HttpResponse<String> createRes = postTransfer("sandbox", key, payload);
+    String txId = JsonPath.read(createRes.body(), "$.transactionId");
+
+    when(participantClient.queryLegStatus(eq("http://localhost:9001"), eq(txId), eq("DEBIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "DEBIT", "COMPLETED", null, "deb-1", "SYNTHETIC")));
+    when(participantClient.queryLegStatus(eq("http://localhost:9002"), eq(txId), eq("CREDIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "CREDIT", "REJECTED", "AC04", "cred-rej", "SYNTHETIC")));
+
+    // Reversal call to source bank-a with key:rev and reversalOf:txId
+    when(participantClient.applyLeg(
+            eq("http://localhost:9001"),
+            eq(key + ":rev"),
+            argThat(
+                req ->
+                    txId.equals(req.reversalOf()) && (txId + "-rev").equals(req.transactionId()))))
+        .thenReturn(PaymentCallOutcome.completed("rev-ok"));
+
+    HttpResponse<String> resolveRes = postResolve(txId);
+    assertThat(resolveRes.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.state")).isEqualTo("REJECTED");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.reasonCode")).isEqualTo("AC04");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.emittedBy")).isEqualTo("DESTINATION");
+    assertThat(JsonPath.<Boolean>read(resolveRes.body(), "$.needsManualReview")).isFalse();
+  }
+
+  @Test
+  @DisplayName(
+      "ADR 0001 Row 5c: Reversal rejected by source -> stays UNKNOWN and flags needsManualReview")
+  void resolveRow5cReversalRejectedFlagsManualReview() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ROW5C");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-1"));
+    when(participantClient.applyLeg(eq("http://localhost:9002"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Credit timeout"));
+
+    HttpResponse<String> createRes = postTransfer("sandbox", key, payload);
+    String txId = JsonPath.read(createRes.body(), "$.transactionId");
+
+    when(participantClient.queryLegStatus(eq("http://localhost:9001"), eq(txId), eq("DEBIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "DEBIT", "COMPLETED", null, "deb-1", "SYNTHETIC")));
+    when(participantClient.queryLegStatus(eq("http://localhost:9002"), eq(txId), eq("CREDIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "CREDIT", "REJECTED", "AC04", "cred-rej", "SYNTHETIC")));
+
+    // Source bank refuses reversal
+    when(participantClient.applyLeg(eq("http://localhost:9001"), eq(key + ":rev"), any()))
+        .thenReturn(PaymentCallOutcome.rejected("MS03", "Reversal rejected by ledger"));
+
+    HttpResponse<String> resolveRes = postResolve(txId);
+    assertThat(resolveRes.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.state")).isEqualTo("UNKNOWN");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.pendingAction"))
+        .isEqualTo("REVERSE_DEBIT");
+    assertThat(JsonPath.<Boolean>read(resolveRes.body(), "$.needsManualReview")).isTrue();
+  }
+
+  @Test
+  @DisplayName("ADR 0001 Row 6: Destination ACCEPTED -> stays UNKNOWN with RETRY_CREDIT")
+  void resolveRow6DestinationAcceptedStaysUnknown() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ROW6");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-1"));
+    when(participantClient.applyLeg(eq("http://localhost:9002"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Credit timeout"));
+
+    HttpResponse<String> createRes = postTransfer("sandbox", key, payload);
+    String txId = JsonPath.read(createRes.body(), "$.transactionId");
+
+    when(participantClient.queryLegStatus(eq("http://localhost:9001"), eq(txId), eq("DEBIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "DEBIT", "COMPLETED", null, "deb-1", "SYNTHETIC")));
+    when(participantClient.queryLegStatus(eq("http://localhost:9002"), eq(txId), eq("CREDIT")))
+        .thenReturn(
+            Optional.of(
+                new ParticipantClient.LegResponsePayload(
+                    txId, "CREDIT", "ACCEPTED", null, "cred-acc", "SYNTHETIC")));
+
+    HttpResponse<String> resolveRes = postResolve(txId);
+    assertThat(resolveRes.statusCode()).isEqualTo(200);
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.state")).isEqualTo("UNKNOWN");
+    assertThat(JsonPath.<String>read(resolveRes.body(), "$.pendingAction"))
+        .isEqualTo("RETRY_CREDIT");
+    assertThat(JsonPath.<Boolean>read(resolveRes.body(), "$.needsManualReview")).isFalse();
+  }
+
+  @Test
+  @DisplayName("Resolve on non-existent transfer returns HTTP 404 NOT_FOUND")
+  void resolveNonExistentTransferReturns404() throws Exception {
+    HttpResponse<String> res = postResolve("tx-doesnotexist");
+    assertThat(res.statusCode()).isEqualTo(404);
+    assertThat(JsonPath.<String>read(res.body(), "$.code")).isEqualTo("NOT_FOUND");
   }
 }

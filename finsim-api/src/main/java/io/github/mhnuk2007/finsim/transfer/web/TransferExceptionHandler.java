@@ -6,6 +6,7 @@ import io.github.mhnuk2007.finsim.transfer.TransferExceptions.InvalidTransferReq
 import io.github.mhnuk2007.finsim.transfer.TransferExceptions.MissingIdempotencyKeyException;
 import io.github.mhnuk2007.finsim.transfer.TransferExceptions.ReconciliationRequiredException;
 import io.github.mhnuk2007.finsim.transfer.TransferExceptions.TransferNotFoundException;
+import io.github.mhnuk2007.finsim.transfer.TransferExceptions.TransferNotResolvableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,6 +38,13 @@ public class TransferExceptionHandler {
   @ExceptionHandler(ReconciliationRequiredException.class)
   public ResponseEntity<ErrorResponse> handleReconciliationRequired(
       ReconciliationRequiredException ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(new ErrorResponse(ex.code(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(TransferNotResolvableException.class)
+  public ResponseEntity<ErrorResponse> handleTransferNotResolvable(
+      TransferNotResolvableException ex) {
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(new ErrorResponse(ex.code(), ex.getMessage()));
   }

@@ -36,9 +36,9 @@ Register an institution (slug id, name, type, base URL, capabilities); persist i
 One seeded `sandbox` network with a hardcoded scheme (USD only, `wf.transfer.v1` workflow). Seed data labeled `SYNTHETIC`.
 *Status:* Completed. FinSim auto-seeds `sandbox` network and joins `bank-a` and `bank-b` upon startup idempotently.
 
-**7. Capability check before routing** `[milestone-1]` `[partially-done]`
+**7. Capability check before routing** `[milestone-1]` `[done]`
 FinSim refuses to route a leg to an institution that hasn't declared the required capability (`ACCOUNT_DEBIT`, `ACCOUNT_CREDIT`, `STATUS_QUERY`).
-*Status:* Registry capability validation and `Registry.requireRoutable(...)` method completed and tested. Transfer orchestrator integration pending Issue 10.
+*Status:* Completed. `Registry.requireRoutable(...)` integrated into `TransferOrchestrator` and verified in `TransferWorkflowTests`.
 
 ---
 
@@ -48,25 +48,25 @@ FinSim refuses to route a leg to an institution that hasn't declared the require
 Transfer aggregate root with 10 strictly permitted transitions across `CREATED`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`, `REJECTED`, and `UNKNOWN`. Append-only stage history (`transfer_stages`), explicit `needsManualReview` support, time determinism (all mutations accept `Instant`/`Clock`), and strict separation between domain rejection `ReasonCode` and HTTP `ApiErrorCode`.
 *Status:* Completed and covered by comprehensive unit tests in `finsim-core`.
 
-**9. Idempotency for the network API** `[milestone-1]`
+**9. Idempotency for the network API** `[milestone-1]` `[done]`
 `Idempotency-Key` required on network mutating requests; identical key and body returns original response; differing body returns `409 IDEMPOTENCY_CONFLICT`.
-*Done when:* tests cover missing key, replay, and conflict.
+*Status:* Completed. Handled in `TransferService` and covered by integration tests in `TransferWorkflowTests`.
 
-**10. Transfer workflow: debit then credit** `[milestone-1]`
+**10. Transfer workflow: debit then credit** `[milestone-1]` `[done]`
 Orchestrate `DEBIT` at source institution, then `CREDIT` at destination institution over HTTP, using stage-level idempotency keys derived deterministically from the transaction id.
-*Done when:* happy-path transfer reaches `COMPLETED` across two institutions.
+*Status:* Completed. Implemented in `TransferOrchestrator` and `ParticipantClient`, verified across 16 scenarios in `TransferWorkflowTests`.
 
-**11. Timeout handling and `UNKNOWN`** `[milestone-1]`
+**11. Timeout handling and `UNKNOWN`** `[milestone-1]` `[done]`
 A timed-out outbound call moves the transfer to `UNKNOWN` (never `REJECTED`). Retrying the transfer while `UNKNOWN` returns `409 RECONCILIATION_REQUIRED`.
-*Done when:* scenario test shows the retry block and state persistence.
+*Status:* Completed. Verified state transition to `UNKNOWN`, pendingAction population, and retry blocking with HTTP 409.
 
-**12. Resolve endpoint** `[milestone-1]`
+**12. Resolve endpoint** `[milestone-1]` `[done]`
 `POST /api/v1/transfers/{id}/resolve` queries each leg via `GET /finsim/v1/payments/{id}` and applies the decision table in [ADR 0001](adr/0001-resolving-unknown-transfers.md): re-send a lost credit with the same idempotency key, reverse the debit only after a definitive rejection, never guess.
-*Done when:* every row of the ADR's decision table has a scenario test, and `resolve` is idempotent.
+*Status:* Completed. Implemented in `TransferOrchestrator.resolve` and `TransferController`, covering all decision table rows with dedicated scenario tests.
 
-**13. Reason codes** `[milestone-1]` `[partially-done]` `[gfi]`
+**13. Reason codes** `[milestone-1]` `[done]` `[gfi]`
 Standardized reason code registry (ISO 20022 codes like `AC01`, `AC04`, `AM02`, `AM04`, `DUPL`, `MS03`, plus FinSim platform codes). Every rejection must carry a reason code and emitter (`SOURCE`, `DESTINATION`, `FINSIM`).
-*Status:* Domain enum `ReasonCode` and validation checks implemented in `finsim-core`. End-to-end propagation from participant responses pending transfer workflow.
+*Status:* Completed. Enums, ISO code validation, and end-to-end propagation from participant responses verified.
 
 **14. Property-based test: no duplicate effects** `[milestone-1]`
 Random sequences of duplicate requests, timeouts, and retries never change balances more than once per transfer.

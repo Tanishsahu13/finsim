@@ -46,4 +46,10 @@ public final class TransferExceptions {
       super("INVALID_REQUEST", message);
     }
   }
+
+  public static class TransferNotResolvableException extends TransferException {
+    public TransferNotResolvableException(String message) {
+      super("TRANSFER_NOT_RESOLVABLE", message);
+    }
+  }
 }

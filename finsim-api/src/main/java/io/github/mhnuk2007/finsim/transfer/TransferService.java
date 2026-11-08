@@ -8,6 +8,7 @@ import io.github.mhnuk2007.finsim.transfer.TransferExceptions.InvalidTransferReq
 import io.github.mhnuk2007.finsim.transfer.TransferExceptions.MissingIdempotencyKeyException;
 import io.github.mhnuk2007.finsim.transfer.TransferExceptions.ReconciliationRequiredException;
 import io.github.mhnuk2007.finsim.transfer.TransferExceptions.TransferNotFoundException;
+import io.github.mhnuk2007.finsim.transfer.TransferExceptions.TransferNotResolvableException;
 import io.github.mhnuk2007.finsim.transfer.internal.TransferEntity;
 import io.github.mhnuk2007.finsim.transfer.internal.TransferOrchestrator;
 import io.github.mhnuk2007.finsim.transfer.internal.TransferRepository;
@@ -105,6 +106,25 @@ public class TransferService {
             .orElseThrow(() -> new TransferNotFoundException(transactionId));
     List<TransferStageEntity> stages = stageRepository.findByTransferIdOrderByIdAsc(transactionId);
     return entity.toDomain(stages);
+  }
+
+  /**
+   * Resolves an ambiguous (UNKNOWN) transfer according to the rules in ADR 0001.
+   *
+   * @param transactionId unique transaction id
+   * @return the resolved transfer in its terminal or updated state
+   */
+  public Transfer resolveTransfer(String transactionId) {
+    Transfer transfer = getTransfer(transactionId);
+    if (transfer.getState().isTerminal()) {
+      return transfer;
+    }
+    if (transfer.getState() != TransferState.UNKNOWN) {
+      throw new TransferNotResolvableException(
+          "Transfer '%s' is in state '%s' and cannot be resolved (only UNKNOWN transfers can be resolved)."
+              .formatted(transactionId, transfer.getState()));
+    }
+    return orchestrator.resolve(transfer);
   }
 
   private static void validateIdempotencyKey(String key) {
