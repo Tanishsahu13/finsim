@@ -34,6 +34,7 @@ Timeouts, duplicate requests, and uncertain outcomes are the hardest parts of pa
 | Transfer domain: aggregate root, state machine, append-only history | Done |
 | Institution registry: registration, static sandbox network, seed data, CLI | Done |
 | Sample bank (Java): in-memory bank implementing participant contract | Done (`samples/bank-java`) |
+| Payment orchestration & ADR 0001 resolution: debit/credit orchestration, `UNKNOWN` state handling, resolve endpoint | Done |
 | Milestone 1: two sample banks, `finsim/v1` minimal contract, payment state machine with `UNKNOWN`, fault injection, `finsim trace`, `finsim verify` | In progress |
 | Milestone 2: card authorize/capture/refund, virtual clock, ledger | Planned |
 | Milestone 3: disputes, reconciliation, scenario replay | Planned |

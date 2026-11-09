@@ -1,7 +1,7 @@
 # Quickstart
 
-> **Status: partially runnable (milestone 1 in active progress).**
-> The database, FinSim platform API, institution registry, CLI commands (`institutions`, `networks`, `register`, `join`), and Java sample bank (`bank-a`, `bank-b`) are **runnable today**. Transfer orchestration, fault injection, and automated contract verification (`finsim verify`) are being actively implemented.
+> **Status: runnable platform baseline (milestone 1 in active progress).**
+> The database, FinSim platform API, institution registry, payment transfer orchestration (`POST /api/v1/networks/{networkId}/transfers`), reconciliation resolution (`POST /api/v1/transfers/{id}/resolve`), CLI commands (`institutions`, `networks`, `register`, `join`), and Java sample banks (`bank-a`, `bank-b`) are **runnable today**. Fault injection (#22), trace recording (#23), chaos testing (#24), and native CLI verification (#25) are in active development.
 > Track detailed issue progress in [milestone-1-issues.md](milestone-1-issues.md).
 
 ---

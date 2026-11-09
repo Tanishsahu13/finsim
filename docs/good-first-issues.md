@@ -40,6 +40,18 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 
 ---
 
+### Advanced Systems & Verification ("Help Wanted")
+*Core distributed systems simulation, tracing, chaos invariant testing, and native CLI verification engine.*
+
+| Issue | Area | Description |
+|---|---|---|
+| **[#22](https://github.com/mhnuk2007/finsim/issues/22)** | `finsim-sim` / `finsim-api` | **Fault injection rule engine**: Configurable rules (`DELAY`, `TIMEOUT`, `DUPLICATE_DELIVERY`), seeded deterministic PRNG, count limits, and HTTP client interception. |
+| **[#23](https://github.com/mhnuk2007/finsim/issues/23)** | `finsim-api` | **Transfer trace recording and endpoint**: Record stages, outbound calls, injected faults, and recovery steps chronologically; expose `GET /api/v1/transfers/{id}/trace`. |
+| **[#24](https://github.com/mhnuk2007/finsim/issues/24)** | `finsim-core` / `finsim-api` | **Property-based tests for zero duplicate financial effects**: Prove conservation of value and idempotency invariants under random chaos sequences with `jqwik`. |
+| **[#25](https://github.com/mhnuk2007/finsim/issues/25)** | `finsim-cli` | **Participant conformance test engine (`finsim verify --url`)**: Native Java/Picocli 7-phase conformance runner with detailed diagnostic reporting. |
+
+---
+
 ### Core Team Work
 *On the critical path for the Milestone 1 launch; maintained directly by core team.*
 
