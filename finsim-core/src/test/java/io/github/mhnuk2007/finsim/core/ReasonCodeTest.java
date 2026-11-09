@@ -14,10 +14,16 @@ class ReasonCodeTest {
   void testIso20022Codes() {
     assertThat(ReasonCode.AC01.isIso20022()).isTrue();
     assertThat(ReasonCode.AC04.isIso20022()).isTrue();
+    assertThat(ReasonCode.AC06.isIso20022()).isTrue();
+    assertThat(ReasonCode.AG01.isIso20022()).isTrue();
     assertThat(ReasonCode.AM02.isIso20022()).isTrue();
     assertThat(ReasonCode.AM04.isIso20022()).isTrue();
+    assertThat(ReasonCode.BE04.isIso20022()).isTrue();
     assertThat(ReasonCode.DUPL.isIso20022()).isTrue();
     assertThat(ReasonCode.MS03.isIso20022()).isTrue();
+    assertThat(ReasonCode.RC01.isIso20022()).isTrue();
+    assertThat(ReasonCode.RR01.isIso20022()).isTrue();
+    assertThat(ReasonCode.RR04.isIso20022()).isTrue();
   }
 
   @Test
@@ -42,10 +48,16 @@ class ReasonCodeTest {
       strings = {
         "AC01",
         "AC04",
+        "AC06",
+        "AG01",
         "AM02",
         "AM04",
+        "BE04",
         "DUPL",
         "MS03",
+        "RC01",
+        "RR01",
+        "RR04",
         "FINSIM_TIMEOUT",
         "CAPABILITY_NOT_SUPPORTED"
       })
