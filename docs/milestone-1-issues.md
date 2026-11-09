@@ -71,6 +71,7 @@ Standardized reason code registry (ISO 20022 codes like `AC01`, `AC04`, `AM02`, 
 **14. Property-based test: no duplicate effects** `[milestone-1]`
 Random sequences of duplicate requests, timeouts, and retries never change balances more than once per transfer.
 *Done when:* the property holds across thousands of generated cases in CI, including repeated `resolve` calls and reversal timeouts (see ADR 0001).
+*Issue:* [#24](https://github.com/mhnuk2007/finsim/issues/24)
 
 ---
 
@@ -79,10 +80,12 @@ Random sequences of duplicate requests, timeouts, and retries never change balan
 **15. Fault rules (DELAY, TIMEOUT, DUPLICATE_DELIVERY)** `[milestone-1]`
 Implement `/api/v1/faults` and apply rules on outbound calls, with optional probability, count cap, and seed.
 *Done when:* the same seed produces the same fault sequence.
+*Issue:* [#22](https://github.com/mhnuk2007/finsim/issues/22)
 
 **16. Trace recording and endpoint** `[milestone-1]`
 Record stages, outbound calls (request, response, duration), injected faults, and state changes; expose `GET /api/v1/transfers/{id}/trace`.
 *Done when:* a faulted transfer's trace shows the fault and the resulting `UNKNOWN`.
+*Issue:* [#23](https://github.com/mhnuk2007/finsim/issues/23)
 
 ---
 
@@ -95,6 +98,7 @@ Minimal Spring Boot bank in `samples/bank-java` implementing the participant con
 **18. Sample bank in Node** `[milestone-1]` `[help wanted]`
 Same behavior in Node/TypeScript, in a separate directory, no shared code.
 *Done when:* both banks pass the same verification and can transact with each other.
+*Issue:* [#11](https://github.com/mhnuk2007/finsim/issues/11)
 
 **19. CLI: `register`, `transfer`, `trace`, `fault`** `[milestone-1]` `[partially-done]`
 Commands that wrap the network API with human-readable output.
@@ -103,6 +107,7 @@ Commands that wrap the network API with human-readable output.
 **20. CLI: `finsim verify --url`** `[milestone-1]`
 Check health, capabilities, debit and credit, idempotent replay, idempotency conflict, status query, and error shape. Actionable messages: which check failed, why, how to fix.
 *Done when:* both sample banks pass; a deliberately broken bank fails with clear messages.
+*Issue:* [#25](https://github.com/mhnuk2007/finsim/issues/25)
 
 ---
 
@@ -111,6 +116,7 @@ Check health, capabilities, debit and credit, idempotent replay, idempotency con
 **21. Docker Compose quickstart** `[milestone-1]` `[partially-done]`
 `docker compose up` brings up FinSim, Postgres, both banks, and the seeded network.
 *Status:* PostgreSQL 17 compose definition active in `deploy/docker-compose.yml`. Containerization of FinSim API and sample banks pending final assembly.
+*Issue:* [#19](https://github.com/mhnuk2007/finsim/issues/19)
 
 **22. Docs pass** `[milestone-1]` `[docs]` `[in-progress]`
 Keep `docs/quickstart.md`, `docs/database.md`, `docs/registry.md`, `docs/contract-v1.md`, and `README.md` synchronized with the actual codebase capabilities.
