@@ -21,10 +21,35 @@ public enum ReasonCode {
   // ISO 20022 reason codes
   AC01("AC01", "Incorrect account number", true),
   AC04("AC04", "Closed account number", true),
+  /**
+   * ISO 20022 {@code AC06} (BlockedAccount): account is blocked, prohibiting transaction posting.
+   */
+  AC06("AC06", "Blocked account", true),
+  /**
+   * ISO 20022 {@code AG01} (TransactionForbidden): transaction is forbidden on this type of
+   * account.
+   */
+  AG01("AG01", "Transaction forbidden on this type of account", true),
   AM02("AM02", "Transaction amount outside allowed limits", true),
   AM04("AM04", "Insufficient funds", true),
+  /**
+   * ISO 20022 {@code BE04} (MissingCreditorAddress): required creditor address is missing or
+   * incorrect.
+   */
+  BE04("BE04", "Missing creditor address", true),
   DUPL("DUPL", "Duplicate payment", true),
   MS03("MS03", "Not specified reason agent generated", true),
+  /**
+   * ISO 20022 {@code RC01} (BankIdentifierIncorrect): bank identifier or routing code is incorrect.
+   */
+  RC01("RC01", "Bank identifier incorrect", true),
+  /**
+   * ISO 20022 {@code RR01} (MissingDebtorAccountOrIdentification): debtor account or identification
+   * required for regulatory reasons is missing or insufficient.
+   */
+  RR01("RR01", "Missing debtor account or identification", true),
+  /** ISO 20022 {@code RR04} (RegulatoryReason): rejection due to a regulatory reason. */
+  RR04("RR04", "Regulatory reason", true),
 
   // FinSim-specific transfer rejection codes
   FINSIM_TIMEOUT("FINSIM_TIMEOUT", "FinSim outbound call timed out", false),
