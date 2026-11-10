@@ -30,8 +30,8 @@ Issue list: [milestone-1-issues.md](milestone-1-issues.md).
 - **Card authorization model** (section 6): authorize, capture, partial capture, void, expiry, refund.
 - **Virtual clock** for business time (authorization expiry, due dates) — [#27](https://github.com/mhnuk2007/finsim/issues/27).
 - **Simple ledger** with balanced double-entry journals and invariant tests — [#28](https://github.com/mhnuk2007/finsim/issues/28).
-- Sample merchant and gateway institutions.
-- Fault types extended: failed capture, delayed webhook.
+- Sample merchant, gateway, and ATM institutions (cash dispense fault simulation).
+- Fault types extended: failed capture, delayed webhook, hardware dispense failure.
 
 ### M3: Disputes, reconciliation, replay
 - **Disputes and chargebacks** as a sibling aggregate that never mutates the original payment. Scheme-specific reason codes, deadlines on the virtual clock, representment, arbitration. Scheme rules are synthetic.
