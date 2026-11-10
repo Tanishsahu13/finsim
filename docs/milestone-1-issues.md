@@ -116,16 +116,25 @@ Check health, capabilities, debit and credit, idempotent replay, idempotency con
 
 ---
 
+## Web & Frontend
+
+**22. Next.js 16 web workspace scaffold, design system and base shell** `[milestone-1]` `[gfi]`
+Initialize `web/` with Next.js 16 (App Router), React 19, Tailwind CSS v4, TypeScript, Lucide icons, financial semantic color tokens, marketing layout shell (`/(marketing)`), simulation cockpit shell (`/(cockpit)`), and zero-backend mock fixtures.
+*Done when:* `npm run dev` and `npm run build` succeed, `/` renders the marketing shell, and `/app` renders the simulation cockpit shell.
+*Issue:* [#29](https://github.com/mhnuk2007/finsim/issues/29)
+
+---
+
 ## Release readiness
 
-**22. Docker Compose quickstart** `[milestone-1]` `[partially-done]`
+**23. Docker Compose quickstart** `[milestone-1]` `[partially-done]`
 `docker compose up` brings up FinSim, Postgres, both banks, and the seeded network.
 *Status:* PostgreSQL 17 compose definition active in `deploy/docker-compose.yml`. Containerization of FinSim API and sample banks pending final assembly.
 *Issue:* [#19](https://github.com/mhnuk2007/finsim/issues/19)
 
-**23. Docs pass** `[milestone-1]` `[docs]` `[in-progress]`
+**24. Docs pass** `[milestone-1]` `[docs]` `[in-progress]`
 Keep `docs/quickstart.md`, `docs/database.md`, `docs/registry.md`, `docs/contract-v1.md`, and `README.md` synchronized with the actual codebase capabilities.
 
-**24. Name and launch checks** `[milestone-1]` `[partially-done]`
+**25. Name and launch checks** `[milestone-1]` `[partially-done]`
 Name search, `SECURITY` contact, Code of Conduct file, issue and PR templates, 10 labeled good first issues.
 *Status:* 10 curated good first issues published on GitHub (#11 through #20) and documented in `docs/good-first-issues.md`. Issue and PR templates active. Maintainer governance checklist in progress.
