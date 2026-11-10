@@ -87,24 +87,29 @@ Record stages, outbound calls (request, response, duration), injected faults, an
 *Done when:* a faulted transfer's trace shows the fault and the resulting `UNKNOWN`.
 *Issue:* [#23](https://github.com/mhnuk2007/finsim/issues/23)
 
+**17. Scenario DSL and deterministic replay engine** `[milestone-1]`
+Declarative scenario format (`scenario.v1.yaml`), seeded faults, isolated execution fixtures, and normalized canonical trace replay verification.
+*Done when:* a faulted scenario replayed against an isolated fixture reproduces identical normalized trace events and final balance states.
+*Issue:* [#26](https://github.com/mhnuk2007/finsim/issues/26)
+
 ---
 
 ## Samples and tooling
 
-**17. Sample bank in Java** `[milestone-1]` `[done]`
+**18. Sample bank in Java** `[milestone-1]` `[done]`
 Minimal Spring Boot bank in `samples/bank-java` implementing the participant contract with in-memory accounts, idempotency store, and seeded balances (`bank-a` on port 9001, `bank-b` on port 9002).
 *Status:* Completed. Passed both unit ledger tests (`BankServiceTest`) and HTTP contract compliance tests (`ContractHttpTest`).
 
-**18. Sample bank in Node** `[milestone-1]` `[help wanted]`
+**19. Sample bank in Node** `[milestone-1]` `[help wanted]`
 Same behavior in Node/TypeScript, in a separate directory, no shared code.
 *Done when:* both banks pass the same verification and can transact with each other.
 *Issue:* [#11](https://github.com/mhnuk2007/finsim/issues/11)
 
-**19. CLI: `register`, `transfer`, `trace`, `fault`** `[milestone-1]` `[partially-done]`
+**20. CLI: `register`, `transfer`, `trace`, `fault`** `[milestone-1]` `[partially-done]`
 Commands that wrap the network API with human-readable output.
 *Status:* Registry commands (`register`, `institutions`, `networks`, `join`) completed with client and JSON handling. Transfer, trace, and fault subcommands pending payment workflow API.
 
-**20. CLI: `finsim verify --url`** `[milestone-1]`
+**21. CLI: `finsim verify --url`** `[milestone-1]`
 Check health, capabilities, debit and credit, idempotent replay, idempotency conflict, status query, and error shape. Actionable messages: which check failed, why, how to fix.
 *Done when:* both sample banks pass; a deliberately broken bank fails with clear messages.
 *Issue:* [#25](https://github.com/mhnuk2007/finsim/issues/25)
@@ -113,14 +118,14 @@ Check health, capabilities, debit and credit, idempotent replay, idempotency con
 
 ## Release readiness
 
-**21. Docker Compose quickstart** `[milestone-1]` `[partially-done]`
+**22. Docker Compose quickstart** `[milestone-1]` `[partially-done]`
 `docker compose up` brings up FinSim, Postgres, both banks, and the seeded network.
 *Status:* PostgreSQL 17 compose definition active in `deploy/docker-compose.yml`. Containerization of FinSim API and sample banks pending final assembly.
 *Issue:* [#19](https://github.com/mhnuk2007/finsim/issues/19)
 
-**22. Docs pass** `[milestone-1]` `[docs]` `[in-progress]`
+**23. Docs pass** `[milestone-1]` `[docs]` `[in-progress]`
 Keep `docs/quickstart.md`, `docs/database.md`, `docs/registry.md`, `docs/contract-v1.md`, and `README.md` synchronized with the actual codebase capabilities.
 
-**23. Name and launch checks** `[milestone-1]` `[partially-done]`
+**24. Name and launch checks** `[milestone-1]` `[partially-done]`
 Name search, `SECURITY` contact, Code of Conduct file, issue and PR templates, 10 labeled good first issues.
 *Status:* 10 curated good first issues published on GitHub (#11 through #20) and documented in `docs/good-first-issues.md`. Issue and PR templates active. Maintainer governance checklist in progress.

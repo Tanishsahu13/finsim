@@ -28,8 +28,8 @@ Issue list: [milestone-1-issues.md](milestone-1-issues.md).
 
 ### M2: Cards, time, and money movement
 - **Card authorization model** (section 6): authorize, capture, partial capture, void, expiry, refund.
-- **Virtual clock** for business time (authorization expiry, due dates).
-- **Simple ledger** with balanced double-entry journals and invariant tests.
+- **Virtual clock** for business time (authorization expiry, due dates) — [#27](https://github.com/mhnuk2007/finsim/issues/27).
+- **Simple ledger** with balanced double-entry journals and invariant tests — [#28](https://github.com/mhnuk2007/finsim/issues/28).
 - Sample merchant and gateway institutions.
 - Fault types extended: failed capture, delayed webhook.
 
