@@ -36,7 +36,7 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | **[#11](https://github.com/mhnuk2007/finsim/issues/11)** | TypeScript / Node.js | **Sample bank in Node.js / TypeScript**: In-memory participant bank under `samples/bank-node/` using Express or Fastify. Default port `9012` (or configurable via `PORT`) to avoid colliding with Java `bank-b` on `9002`. |
 | **[#12](https://github.com/mhnuk2007/finsim/issues/12)** | Python / FastAPI | **Sample bank in Python (FastAPI)**: In-memory participant bank under `samples/bank-python/` using `decimal.Decimal` and `pydantic`. Default port `9003`. |
 | **[#13](https://github.com/mhnuk2007/finsim/issues/13)** | Go | **Sample bank in Go**: In-memory participant bank under `samples/bank-go/` using `net/http` or `chi`. Default port `9004`. |
-| **[#16](https://github.com/mhnuk2007/finsim/issues/16)** | Spring Boot / Docs | **Dev-only Swagger UI for contract and admin API**: Serve authoritative static OpenAPI contract and admin spec at `/swagger-ui.html` without code-gen drift; dev profile only. |
+| **[#16](https://github.com/mhnuk2007/finsim/issues/16)** *(Closed)* | Spring Boot / Docs | ~~**Dev-only Swagger UI for contract and admin API**~~ *(Completed by @wood0v0 in [#30](https://github.com/mhnuk2007/finsim/pull/30))*: Added `springdoc-openapi-starter-webmvc-ui` to expose Swagger UI at `/swagger-ui.html` and metadata at `/v3/api-docs`. |
 
 ---
 
