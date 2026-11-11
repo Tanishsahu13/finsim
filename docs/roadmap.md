@@ -31,7 +31,7 @@ Issue list: [milestone-1-issues.md](milestone-1-issues.md).
 - **Virtual clock** for business time (authorization expiry, due dates) — [#27](https://github.com/mhnuk2007/finsim/issues/27).
 - **Simple ledger** with balanced double-entry journals and invariant tests — [#28](https://github.com/mhnuk2007/finsim/issues/28).
 - **Simulation state snapshot and reset engine** for CI and deterministic replay — [#32](https://github.com/mhnuk2007/finsim/issues/32).
-- Sample merchant, gateway, and ATM institutions (cash dispense fault simulation).
+- Sample merchant, gateway, and ATM institutions (cash dispense fault simulation) — [#33](https://github.com/mhnuk2007/finsim/issues/33).
 - Fault types extended: failed capture, delayed webhook, hardware dispense failure.
 
 ### M3: Disputes, reconciliation, replay
