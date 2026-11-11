@@ -30,6 +30,7 @@ Issue list: [milestone-1-issues.md](milestone-1-issues.md).
 - **Card authorization model** (section 6): authorize, capture, partial capture, void, expiry, refund.
 - **Virtual clock** for business time (authorization expiry, due dates) — [#27](https://github.com/mhnuk2007/finsim/issues/27).
 - **Simple ledger** with balanced double-entry journals and invariant tests — [#28](https://github.com/mhnuk2007/finsim/issues/28).
+- **Simulation state snapshot and reset engine** for CI and deterministic replay — [#32](https://github.com/mhnuk2007/finsim/issues/32).
 - Sample merchant, gateway, and ATM institutions (cash dispense fault simulation).
 - Fault types extended: failed capture, delayed webhook, hardware dispense failure.
 
