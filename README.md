@@ -93,6 +93,14 @@ finsim transfer ...        # ends in UNKNOWN, not FAILED
 - Not a place where uploaded code runs inside the FinSim API process.
 - Not safe to expose to the public internet: the platform and registry APIs have no authentication and are designed strictly for local simulation.
 
+## Academic & Research Use
+
+FinSim is built as a zero-liability, reproducible experimental laboratory for researchers, professors, and university students studying **Distributed Systems**, **Financial Market Infrastructure (FMI)**, **Chaos Engineering**, and **Payment Resilience**.
+
+- **Cite FinSim in Academic Papers:** Scholars are welcome to cite FinSim in theses, conference papers, and technical reports. Use the **"Cite this repository"** button in GitHub's sidebar or see [`CITATION.cff`](CITATION.cff).
+- **University Coursework & Lab Projects:** Instructors in Computer Science, Fintech, or Software Engineering can use our ready-made semester lab modules, syllabi, and grading rubrics in the **[Academic & University Lab Guide](docs/academic-lab-guide.md)**.
+- **Reproducible Benchmark Environments:** Because all entities are labeled `"provenance": "SYNTHETIC"`, peer reviewers can clone and reproduce chaos injection experiments in under 5 minutes without NDA or banking compliance barriers.
+
 ## Contributing
 
 Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), browse our [Good First Issues](https://github.com/mhnuk2007/finsim/labels/good%20first%20issue), or check the [contributor issues guide](docs/good-first-issues.md). Project decisions are described in [GOVERNANCE.md](GOVERNANCE.md).

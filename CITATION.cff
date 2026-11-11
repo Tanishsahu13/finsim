@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software in your research or university coursework, please cite it using the metadata below."
+authors:
+  - family-names: "Lal"
+    given-names: "Mohan"
+    alias: "mhnuk2007"
+title: "FinSim: An Open-Source Simulator for Financial Networks and Distributed Systems Resilience"
+abstract: "FinSim is an open-source, reproducible simulation platform designed to connect independent banking participants, orchestrate interbank payments, inject distributed systems chaos (network timeouts, duplicate delivery, hardware partial failure), and verify financial consistency invariants without real-world financial risk."
+version: 0.1.0-pre-alpha
+date-released: 2026-11-09
+url: "https://github.com/mhnuk2007/finsim"
+repository-code: "https://github.com/mhnuk2007/finsim"
+license: Apache-2.0
+keywords:
+  - "distributed systems"
+  - "financial networks"
+  - "payment simulation"
+  - "chaos engineering"
+  - "fault injection"
+  - "idempotency"
+  - "double-entry accounting"
+  - "iso 20022"
+  - "virtual clock"
+  - "reproducible research"
