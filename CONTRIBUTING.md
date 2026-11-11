@@ -26,11 +26,12 @@ If any of these fail on a clean machine, that is a bug. Please open an issue.
 
 ## Making a change
 
-1. **Find or open an issue.** For anything larger than a small fix, comment first so work isn't duplicated.
-2. **Fork, branch, and make your change.** Keep pull requests focused: one concern per PR.
-3. **Add tests.** Bug fixes need a test that fails without the fix. Anything touching payments, idempotency, or state transitions needs a property-based or scenario test that proves no duplicate or lost financial effect.
-4. **Sign off your commits** with `git commit -s` (see DCO below).
-5. **Open a pull request** and fill in the template. CI must pass.
+1. **Find or open an issue.** Comment on any open issue labeled `good first issue` or `help wanted` stating you'd like to work on it, and a maintainer will assign it to you.
+2. **10-day community reservation window:** To welcome community contributors while maintaining steady project velocity, open issues are reserved for community members for **10 days**. If an issue remains unclaimed after 10 days (or if an assigned contributor goes silent without an update), maintainers will step in to implement and resolve it. Need extra time? Just post a brief progress comment on the issue thread!
+3. **Fork, branch, and make your change.** Keep pull requests focused: one concern per PR.
+4. **Add tests.** Bug fixes need a test that fails without the fix. Anything touching payments, idempotency, or state transitions needs a property-based or scenario test that proves no duplicate or lost financial effect.
+5. **Sign off your commits** with `git commit -s` (see DCO below).
+6. **Open a pull request** and fill in the template. CI must pass.
 
 ## Developer Certificate of Origin (DCO)
 

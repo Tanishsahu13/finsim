@@ -3,6 +3,9 @@
 Welcome! FinSim is an open-source financial network simulator designed to connect independent services, run realistic payment flows, and inject distributed systems failures.
 
 To keep documentation from drifting, **the active [GitHub Issues](https://github.com/mhnuk2007/finsim/issues) are the single source of truth**. Each issue contains detailed acceptance criteria, technical hints, and files to touch.
+ 
+> [!NOTE]
+> **Community First & 10-Day Policy:** Open issues are reserved for community contributors. If you'd like to work on an issue, please leave a comment on the issue thread to be assigned. If an issue remains unclaimed after **10 days**, maintainers will step in to resolve it to keep the project roadmap moving forward.
 
 ---
 
