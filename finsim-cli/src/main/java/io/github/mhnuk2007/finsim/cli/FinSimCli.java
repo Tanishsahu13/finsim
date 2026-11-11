@@ -60,6 +60,11 @@ public class FinSimCli implements Runnable {
     @Mixin Connection connection = new Connection();
     @Spec CommandSpec spec;
 
+    @Option(
+        names = {"--json", "-j"},
+        description = "Output raw JSON")
+    boolean jsonMode;
+
     abstract FinSimClient.Response execute(FinSimClient client)
         throws IOException, InterruptedException;
 
@@ -69,7 +74,7 @@ public class FinSimCli implements Runnable {
       try {
         FinSimClient.Response response = execute(client);
         if (response.ok()) {
-          spec.commandLine().getOut().println(response.body());
+          printSuccess(response.body());
           return 0;
         }
         spec.commandLine()
@@ -90,6 +95,16 @@ public class FinSimCli implements Runnable {
         Thread.currentThread().interrupt();
         return EXIT_FAILED;
       }
+    }
+
+    /**
+     * Prints a successful response. JSON mode pins the machine-readable contract: the raw payload
+     * only, with nothing else on stdout. The default output is the same payload today (the CLI has
+     * no table formatting yet); when human-readable formatting is added it must branch on {@code
+     * jsonMode} and keep this path raw.
+     */
+    private void printSuccess(String body) {
+      spec.commandLine().getOut().println(body);
     }
   }
 
