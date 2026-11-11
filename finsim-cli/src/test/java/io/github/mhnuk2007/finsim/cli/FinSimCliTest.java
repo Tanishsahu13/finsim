@@ -155,6 +155,52 @@ class FinSimCliTest {
   }
 
   @Test
+  void jsonFlagPrintsRawJsonWithoutExtraText() throws Exception {
+    String body = "[{\"id\":\"bank-a\",\"name\":\"Bank A\"}]";
+    String url = stubFinSim(200, body);
+
+    Result result = run("institutions", "--json", "--finsim", url);
+
+    assertThat(result.exit()).isZero();
+    assertThat(result.out().strip()).isEqualTo(body);
+    assertThat(result.err()).isEmpty();
+  }
+
+  @Test
+  void shortJsonFlagBehavesLikeLongForm() throws Exception {
+    String body = "[{\"id\":\"bank-a\"}]";
+    String url = stubFinSim(200, body);
+
+    Result result = run("institutions", "-j", "--finsim", url);
+
+    assertThat(result.exit()).isZero();
+    assertThat(result.out().strip()).isEqualTo(body);
+    assertThat(result.err()).isEmpty();
+  }
+
+  @Test
+  void defaultOutputIsUnchangedWithoutJsonFlag() throws Exception {
+    String body = "[{\"id\":\"bank-a\"}]";
+    String url = stubFinSim(200, body);
+
+    Result result = run("institutions", "--finsim", url);
+
+    assertThat(result.exit()).isZero();
+    assertThat(result.out().strip()).isEqualTo(body);
+  }
+
+  @Test
+  void jsonFlagKeepsErrorsOnStderr() throws Exception {
+    String url = stubFinSim(409, "{\"code\":\"INSTITUTION_ALREADY_EXISTS\"}");
+
+    Result result = run("institutions", "--json", "--finsim", url);
+
+    assertThat(result.exit()).isEqualTo(FinSimCli.EXIT_FAILED);
+    assertThat(result.out()).isEmpty();
+    assertThat(result.err()).contains("409").contains("INSTITUTION_ALREADY_EXISTS");
+  }
+
+  @Test
   void jsonQuotingEscapesSpecialCharacters() {
     assertThat(Json.quote("a\"b\\c\nd")).isEqualTo("\"a\\\"b\\\\c\\nd\"");
     assertThat(Json.array(List.of("X", "Y"))).isEqualTo("[\"X\",\"Y\"]");
