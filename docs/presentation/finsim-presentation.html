@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSim — The Flight Simulator for Digital Money</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #020617;
+            --bg-card: rgba(15, 23, 42, 0.85);
+            --bg-card-border: rgba(51, 65, 85, 0.6);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --accent-purple: #a855f7;
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-canvas);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        /* Presentation controls toolbar */
+        .toolbar {
+            position: fixed;
+            top: 16px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--bg-card-border);
+            padding: 8px 18px;
+            border-radius: 9999px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .toolbar button {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar button:hover {
+            background: var(--accent-cyan);
+            color: #020617;
+            border-color: var(--accent-cyan);
+        }
+
+        .toolbar .counter {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--accent-cyan);
+            font-weight: 700;
+            padding: 0 8px;
+        }
+
+        /* 16:9 Slide Viewport */
+        .deck-container {
+            width: 100%;
+            max-width: 1100px;
+            aspect-ratio: 16 / 9;
+            background: radial-gradient(circle at 50% 20%, #0f172a 0%, #020617 100%);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 16px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(6, 182, 212, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 50px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            transform: scale(0.98);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        /* Slide header */
+        .slide-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            width: fit-content;
+            margin-bottom: 12px;
+        }
+
+        .slide-title {
+            font-size: 38px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-title span.highlight {
+            background: linear-gradient(135deg, #06b6d4, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .slide-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(51, 65, 85, 0.4);
+            padding-top: 14px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* Card Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            width: 100%;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 12px;
+            padding: 22px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0.5;
+        }
+
+        .feature-card.rose::before { background: linear-gradient(90deg, transparent, var(--accent-rose), transparent); }
+        .feature-card.emerald::before { background: linear-gradient(90deg, transparent, var(--accent-emerald), transparent); }
+        .feature-card.purple::before { background: linear-gradient(90deg, transparent, var(--accent-purple), transparent); }
+
+        .card-icon {
+            font-size: 26px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Code & Terminal Snippet */
+        .terminal-box {
+            background: #030712;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 18px;
+            width: 100%;
+            text-align: left;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #1f2937;
+            padding-bottom: 8px;
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.red { background: #ef4444; }
+        .dot.yellow { background: #f59e0b; }
+        .dot.green { background: #10b981; }
+
+        .code-cyan { color: var(--accent-cyan); }
+        .code-green { color: var(--accent-emerald); }
+        .code-rose { color: var(--accent-rose); }
+        .code-amber { color: var(--accent-amber); }
+        .code-muted { color: #64748b; }
+
+        /* Big Hero Slide Styles */
+        .hero-center {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-title {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 16px 0;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            max-width: 680px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tech-badge {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* Flow Visualizer */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 12px;
+            padding: 24px 30px;
+        }
+
+        .flow-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .node-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: #1e293b;
+            border: 2px solid var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+        }
+
+        .node-title { font-size: 14px; font-weight: 700; color: #fff; }
+        .node-sub { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+        .flow-arrow {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .arrow-line {
+            height: 2px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+            position: relative;
+        }
+
+        .arrow-line::after {
+            content: '▶';
+            position: absolute;
+            right: -6px;
+            top: -7px;
+            font-size: 12px;
+            color: var(--accent-emerald);
+        }
+
+        .arrow-label {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+            margin-bottom: 6px;
+        }
+
+        /* Call To Action Box */
+        .cta-card {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(16, 185, 129, 0.15));
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #06b6d4, #10b981);
+            color: #020617;
+            font-weight: 800;
+            padding: 12px 28px;
+            border-radius: 9999px;
+            font-size: 15px;
+            text-decoration: none;
+            margin-top: 16px;
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Controls -->
+    <div class="toolbar">
+        <button id="prevBtn" onclick="prevSlide()">◀ Previous</button>
+        <span class="counter" id="slideNum">1 / 7</span>
+        <button id="nextBtn" onclick="nextSlide()">Next ▶</button>
+    </div>
+
+    <!-- 16:9 Presentation Deck -->
+    <div class="deck-container">
+
+        <!-- SLIDE 1: Title & Hook -->
+        <div class="slide active" id="slide-1">
+            <div class="slide-tag">Open Source • Distributed Systems • Fintech</div>
+            <div class="hero-center">
+                <div style="font-size: 40px; margin-bottom: 8px;">✈️ 💳 🛡️</div>
+                <h1 class="hero-title">FinSim: The Flight Simulator<br><span class="highlight">for Digital Money</span></h1>
+                <p class="hero-subtitle">Connect independent banking services, orchestrate multi-leg payments, and break them on purpose without losing a cent.</p>
+                <div class="badge-row">
+                    <span class="tech-badge">Java 21</span>
+                    <span class="tech-badge">Spring Boot 3</span>
+                    <span class="tech-badge">Next.js 16</span>
+                    <span class="tech-badge">PostgreSQL 17</span>
+                    <span class="tech-badge">Go</span>
+                    <span class="tech-badge">Python</span>
+                </div>
+            </div>
+            <div class="slide-footer">
+                <span>github.com/mhnuk2007/finsim</span>
+                <span>Slide 1 of 7</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: The Problem -->
+        <div class="slide" id="slide-2">
+            <div>
+                <div class="slide-tag">The Industry Challenge</div>
+                <h2 class="slide-title">Why Payment Systems Fail in <span class="highlight">Production</span></h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-3">
+                    <div class="feature-card rose">
+                        <div class="card-icon">⚡</div>
+                        <div class="card-title">Ambiguous Timeouts</div>
+                        <div class="card-desc">An HTTP request to debit Bank A times out after 2.0s. Did Bank A commit the debit or drop the packet? A naive retry causes a duplicate charge.</div>
+                    </div>
+                    <div class="feature-card amber">
+                        <div class="card-icon">🏧</div>
+                        <div class="card-title">Hardware Traps</div>
+                        <div class="card-desc">An ATM initiates a $200 debit, but the physical dispenser jams midway after delivering only $80. Software ledgers must establish physical truth before compensating.</div>
+                    </div>
+                    <div class="feature-card purple">
+                        <div class="card-icon">🔒</div>
+                        <div class="card-title">Closed Sandboxes</div>
+                        <div class="card-desc">Real bank sandboxes simulate one provider in isolation. They forbid chaos injection, mock out real network partitions, and block independent protocol verification.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">
+                <span>FinSim Architectural Manifesto</span>
+                <span>Slide 2 of 7</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: The Architecture -->
+        <div class="slide" id="slide-3">
+            <div>
+                <div class="slide-tag">System Topology</div>
+                <h2 class="slide-title">How FinSim <span class="highlight">Orchestrates Chaos</span></h2>
+            </div>
+            <div class="slide-body" style="width: 100%;">
+                <div class="flow-container">
+                    <div class="flow-node">
+                        <div class="node-icon">🏦</div>
+                        <div class="node-title">Bank A</div>
+                        <div class="node-sub">Source Leg (Debit)</div>
+                    </div>
+                    <div class="flow-arrow">
+                        <span class="arrow-label">POST /payments (Debit)</span>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="flow-node">
+                        <div class="node-icon" style="border-color: #10b981; box-shadow: 0 0 20px rgba(16,185,129,0.3);">⚙️</div>
+                        <div class="node-title" style="color: #10b981;">FinSim Orchestrator</div>
+                        <div class="node-sub">State Machine & Chaos Engine</div>
+                    </div>
+                    <div class="flow-arrow">
+                        <span class="arrow-label">POST /payments (Credit)</span>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="flow-node">
+                        <div class="node-icon">🏛️</div>
+                        <div class="node-title">Bank B</div>
+                        <div class="node-sub">Dest Leg (Credit)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">
+                <span>Contract: finsim/v1 OpenAPI 3.1 • Strict Idempotency Keys</span>
+                <span>Slide 3 of 7</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Core Invariants -->
+        <div class="slide" id="slide-4">
+            <div>
+                <div class="slide-tag">Mathematical Rigor</div>
+                <h2 class="slide-title">4 Uncompromising <span class="highlight">Design Invariants</span></h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-2">
+                    <div class="feature-card emerald">
+                        <div class="card-title">1. UNKNOWN is a Definitive State</div>
+                        <div class="card-desc">Outbound timeouts transition transfers to <code>UNKNOWN</code>, never <code>FAILED</code>. Replaying an UNKNOWN transfer returns <code>409 RECONCILIATION_REQUIRED</code> until resolved via ADR 0001.</div>
+                    </div>
+                    <div class="feature-card cyan">
+                        <div class="card-title">2. Double-Entry Conservation</div>
+                        <div class="card-desc">Money is never created out of thin air. For every transaction across banks, <code>∑ Debits ≡ ∑ Credits</code>. Floating-point math is strictly banned in favor of <code>BigDecimal</code>.</div>
+                    </div>
+                    <div class="feature-card purple">
+                        <div class="card-title">3. Deterministic Virtual Clock</div>
+                        <div class="card-desc">Virtual business time is strictly separated from wall clocks. Simulate 30 days of interest calculation, hold expiry, and batch settlement deterministically in 3 seconds.</div>
+                    </div>
+                    <div class="feature-card rose">
+                        <div class="card-title">4. Strict Synthetic Isolation</div>
+                        <div class="card-desc">Every participant, account, and card carries <code>"provenance": "SYNTHETIC"</code>. Zero real PII or bank secrecy boundaries, making testing 100% reproducible for researchers.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">
+                <span>Formal Invariant Testing with jqwik & Testcontainers</span>
+                <span>Slide 4 of 7</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: Developer Experience -->
+        <div class="slide" id="slide-5">
+            <div>
+                <div class="slide-tag">Developer Experience</div>
+                <h2 class="slide-title">CLI Tooling & <span class="highlight">Interactive Cockpit</span></h2>
+            </div>
+            <div class="slide-body" style="width: 100%;">
+                <div class="grid-2">
+                    <div class="terminal-box">
+                        <div class="terminal-header">
+                            <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                            <span style="color: #64748b; font-size: 11px; margin-left: 10px;">bash — finsim CLI</span>
+                        </div>
+                        <p><span class="code-muted">$</span> <span class="code-cyan">finsim fault add</span> --target bank-b --type TIMEOUT</p>
+                        <p class="code-green">✔ Fault rule registered [id=f-8291]</p>
+                        <br>
+                        <p><span class="code-muted">$</span> <span class="code-cyan">finsim transfer</span> --from bank-a --to bank-b --amount 100.00</p>
+                        <p class="code-amber">⚠ Transfer status: UNKNOWN (Leg 2 timed out)</p>
+                        <br>
+                        <p><span class="code-muted">$</span> <span class="code-cyan">finsim trace</span> tx-7729 --json</p>
+                        <p class="code-muted">{ "tx": "tx-7729", "state": "UNKNOWN", "recovery": "ADR_0001" }</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="card-icon">🖥️</div>
+                        <div class="card-title">Next.js 16 Web Cockpit</div>
+                        <div class="card-desc">
+                            Real-time observability dashboard displaying:
+                            <br><br>
+                            • Live interbank network topology nodes<br>
+                            • Step-by-step transaction trace waterfalls<br>
+                            • Virtual Clock time-advance controls (+1h, +24h)<br>
+                            • Chaos rule toggles (drop rate, latency fuzzing)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">
+                <span>Picocli CLI • Next.js 16 App Router • Swagger UI OpenAPI 3.1</span>
+                <span>Slide 5 of 7</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: Research & Education -->
+        <div class="slide" id="slide-6">
+            <div>
+                <div class="slide-tag">Academic & Research Value</div>
+                <h2 class="slide-title">Why Universities & <span class="highlight">Researchers Love FinSim</span></h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-3">
+                    <div class="feature-card">
+                        <div class="card-icon">🎓</div>
+                        <div class="card-title">Ready-Made Syllabus</div>
+                        <div class="card-desc">6 structured multi-week lab assignments covering Distributed Systems, ISO 20022 payments, and Spring Modulith boundaries with rubrics.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="card-icon">🔬</div>
+                        <div class="card-title">100% Reproducible</div>
+                        <div class="card-desc">No NDA or bank compliance barriers. Scholars can publish peer-reviewed papers using <code>CITATION.cff</code> and run benchmarks in 5 minutes.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="card-icon">🌐</div>
+                        <div class="card-title">Multi-Language Ecosystem</div>
+                        <div class="card-desc">Students write independent banks in Java, Python, Go, or Node.js. FinSim's automated conformance engine validates their code.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">
+                <span>See docs/academic-lab-guide.md • CITATION.cff Active</span>
+                <span>Slide 6 of 7</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: Community Call To Action -->
+        <div class="slide" id="slide-7">
+            <div class="slide-tag">Join The Movement</div>
+            <div class="slide-body" style="width: 100%;">
+                <div class="cta-card">
+                    <h2 style="font-size: 34px; font-weight: 800; margin-bottom: 12px; color: #fff;">
+                        Build Real Production Systems With Us
+                    </h2>
+                    <p style="font-size: 16px; color: #cbd5e1; max-width: 650px; margin: 0 auto 20px; line-height: 1.6;">
+                        We have published beginner-friendly Good First Issues and advanced Distributed Systems tickets with 1-on-1 architectural code reviews.
+                    </p>
+                    <div class="badge-row" style="margin-bottom: 24px;">
+                        <span class="tech-badge" style="border-color: #06b6d4;">Next.js Cockpit (#29)</span>
+                        <span class="tech-badge" style="border-color: #10b981;">FastAPI Bank (#12)</span>
+                        <span class="tech-badge" style="border-color: #f59e0b;">Go Participant (#13)</span>
+                        <span class="tech-badge" style="border-color: #a855f7;">Double-Entry Ledger (#28)</span>
+                    </div>
+                    <a href="https://github.com/mhnuk2007/finsim" target="_blank" class="cta-btn">
+                        Explore FinSim on GitHub ⭐
+                    </a>
+                </div>
+            </div>
+            <div class="slide-footer">
+                <span>10-Day Community Reservation Window Active</span>
+                <span>github.com/mhnuk2007/finsim</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 7;
+
+        function updateSlide() {
+            document.querySelectorAll('.slide').forEach((slide, index) => {
+                slide.classList.toggle('active', index + 1 === currentSlide);
+            });
+            document.getElementById('slideNum').innerText = `${currentSlide} / ${totalSlides}`;
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        // Keyboard arrow navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        updateSlide();
+    </script>
+</body>
+</html>
