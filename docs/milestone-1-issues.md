@@ -104,7 +104,11 @@ Declarative scenario format (`scenario.v1.yaml`), seeded faults, isolated execut
 Minimal Spring Boot bank in `samples/bank-java` implementing the participant contract with in-memory accounts, idempotency store, and seeded balances (`bank-a` on port 9001, `bank-b` on port 9002).
 *Status:* Completed. Passed both unit ledger tests (`BankServiceTest`) and HTTP contract compliance tests (`ContractHttpTest`).
 
-**20. Sample bank in Node** `[milestone-1]` `[help wanted]`
+**20. Sample bank in Python (FastAPI)** `[milestone-1]` `[done]`
+FastAPI participant bank in `samples/bank-python` implementing the `finsim/v1` contract with `decimal.Decimal` arithmetic, in-memory accounts, idempotency store, and pytest verification suite.
+*Status:* Completed by @maestro-00 in [#37](https://github.com/mhnuk2007/finsim/pull/37). Closed [#12](https://github.com/mhnuk2007/finsim/issues/12).
+
+**21. Sample bank in Node** `[milestone-1]` `[help wanted]`
 Same behavior in Node/TypeScript, in a separate directory, no shared code.
 *Done when:* both banks pass the same verification and can transact with each other.
 *Issue:* [#11](https://github.com/mhnuk2007/finsim/issues/11)
