@@ -103,7 +103,7 @@ FinSim is built as a zero-liability, reproducible experimental laboratory for re
 
 ## Contributing
 
-Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), browse our [Good First Issues](https://github.com/mhnuk2007/finsim/labels/good%20first%20issue), or check the [contributor issues guide](docs/good-first-issues.md). Project decisions are described in [GOVERNANCE.md](GOVERNANCE.md).
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), browse our [Good First Issues](https://github.com/mhnuk2007/finsim/labels/good-first-issue), or check the [contributor issues guide](docs/good-first-issues.md). Project decisions are described in [GOVERNANCE.md](GOVERNANCE.md).
 
 ## License
 
