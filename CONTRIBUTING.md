@@ -37,6 +37,41 @@ If any of these fail on a clean machine, that is a bug. Please open an issue.
 
 We do not require a CLA. Instead, every commit must carry a `Signed-off-by: Your Name <you@example.com>` line, added by `git commit -s`. This certifies that you wrote the change or have the right to submit it under the project license (Apache 2.0). The full text is at <https://developercertificate.org>.
 
+## Local verification
+
+CI runs the same three checks on every pull request: a Spotless formatting check, the Gradle tests, and a DCO sign-off check on each commit. Run them locally before opening a pull request so avoidable CI failures are caught early.
+
+```bash
+# Linux/macOS/Git Bash
+bash scripts/verify.sh
+
+# Windows PowerShell
+.\scripts\verify.ps1
+
+# DCO-signed commit
+git commit -s -m "Add feature"
+```
+
+The scripts run, in order:
+
+1. **Formatting** — `./gradlew spotlessCheck` (or `.\gradlew.bat spotlessCheck` on Windows). If it fails, fix formatting with `./gradlew spotlessApply` and re-run.
+2. **Tests** — `./gradlew test`. If tests fail, inspect the Gradle test output to find the failing test; do not hide or skip it.
+3. **DCO sign-off** — checks that the latest commit carries a `Signed-off-by:` line. If it is missing, add it with `git commit --amend -s` (for the latest commit) or sign future commits with `git commit -s`.
+
+A failing check stops the script with a non-zero exit code and a message saying what to do next.
+
+### Optional pre-commit hook
+
+A lightweight pre-commit hook is available in `.githooks/pre-commit`. It runs only the Spotless formatting check before each commit — it does not validate the DCO sign-off, because the commit message does not exist yet at pre-commit time. It is optional and off by default.
+
+```bash
+# Enable the hook
+git config core.hooksPath .githooks
+
+# Disable the hook
+git config --unset core.hooksPath
+```
+
 ## When you need an ADR
 
 An **Architecture Decision Record** (in `docs/adr/`) is required for changes to:
