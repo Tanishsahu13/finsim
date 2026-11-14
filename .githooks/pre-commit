@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Optional FinSim pre-commit hook: runs the lightweight subset of the local
+# verification checks before a commit is created.
+#
+# This hook only runs the Spotless formatting check. It deliberately does NOT
+# validate the DCO sign-off: at pre-commit time the commit message does not
+# exist yet, so there is nothing to check. The full checks (including the
+# sign-off on the finished commit) live in scripts/verify.sh — run that
+# before opening a pull request.
+#
+# Enable it with:
+#   git config core.hooksPath .githooks
+#
+# Disable it with:
+#   git config --unset core.hooksPath
+
+set -u
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+echo "Pre-commit: formatting check (./gradlew spotlessCheck)..."
+if ! ./gradlew spotlessCheck; then
+  echo "Formatting check failed." >&2
+  echo "Run ./gradlew spotlessApply to fix formatting issues, then commit again." >&2
+  exit 1
+fi
+
+echo "Pre-commit: formatting check passed."
+echo "Reminder: sign off your commit with git commit -s (see CONTRIBUTING.md)."
