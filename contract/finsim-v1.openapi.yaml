@@ -14,6 +14,8 @@ info:
     All mutating calls require an `Idempotency-Key` header.
     `transactionId` is a business identifier and is never an authentication credential.
     Every simulated entity carries `provenance: SYNTHETIC`.
+  contact:
+    url: https://github.com/mhnuk2007/finsim
 servers:
   - url: http://localhost:8080
     description: Local FinSim
@@ -29,6 +31,7 @@ paths:
       tags: [Participant contract]
       operationId: getHealth
       summary: Liveness and readiness of the institution.
+      description: Reports whether the institution is up, degraded, or down, and which contract versions it speaks.
       responses:
         "200":
           description: Institution is healthy.
@@ -41,6 +44,7 @@ paths:
       tags: [Participant contract]
       operationId: getCapabilities
       summary: Operations this institution supports. FinSim routes only to declared capabilities.
+      description: Lists the operations, institution type, and currencies the institution declares. FinSim routes only to declared capabilities.
       responses:
         "200":
           description: Declared capabilities.
@@ -90,6 +94,7 @@ paths:
       tags: [Participant contract]
       operationId: getPaymentLeg
       summary: Status of a leg. FinSim uses this to resolve UNKNOWN outcomes.
+      description: Returns the current state of one payment leg; FinSim uses it to resolve UNKNOWN outcomes. The `leg` query parameter selects the DEBIT or CREDIT leg.
       parameters:
         - $ref: "#/components/parameters/TransactionId"
         - name: leg
@@ -113,6 +118,7 @@ paths:
       tags: [Network API]
       operationId: createTransfer
       summary: Start a transfer between two institutions on a network.
+      description: Starts a transfer between two institutions on a network. The same `Idempotency-Key` with the same body replays the original response; with a different body it returns 409.
       parameters:
         - name: networkId
           in: path
@@ -145,6 +151,7 @@ paths:
       tags: [Network API]
       operationId: getTransfer
       summary: Current state of a transfer, including stage history.
+      description: Returns the current state of a transfer, including its stage history.
       parameters:
         - $ref: "#/components/parameters/TransactionId"
       responses:
@@ -161,6 +168,7 @@ paths:
       tags: [Network API]
       operationId: getTrace
       summary: Every stage, outbound call, and injected fault for a transfer.
+      description: Returns every stage, outbound call, and injected fault recorded for a transfer.
       parameters:
         - $ref: "#/components/parameters/TransactionId"
       responses:
@@ -192,6 +200,7 @@ paths:
       tags: [Network API]
       operationId: addFault
       summary: Add a fault rule on calls from FinSim to a participant.
+      description: Adds a fault rule (DELAY, TIMEOUT, or DUPLICATE_DELIVERY) on calls from FinSim to a participant.
       requestBody:
         required: true
         content:
@@ -207,6 +216,7 @@ paths:
       tags: [Network API]
       operationId: listFaults
       summary: List active fault rules.
+      description: Lists the fault rules currently active.
       responses:
         "200":
           description: Active rules.
@@ -221,6 +231,7 @@ paths:
       tags: [Network API]
       operationId: removeFault
       summary: Remove a fault rule.
+      description: Removes a fault rule by id.
       parameters:
         - name: faultId
           in: path
