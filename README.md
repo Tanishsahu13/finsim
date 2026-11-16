@@ -35,6 +35,7 @@ Timeouts, duplicate requests, and uncertain outcomes are the hardest parts of pa
 | Institution registry: registration, static sandbox network, seed data, CLI | Done |
 | Sample bank (Java): in-memory bank implementing participant contract | Done (`samples/bank-java`) |
 | Sample bank (Python): in-memory bank implementing participant contract | Done (`samples/bank-python`) |
+| Sample bank (Node.js/TypeScript): in-memory bank implementing participant contract | Done (`samples/bank-node`) |
 | Payment orchestration & ADR 0001 resolution: debit/credit orchestration, `UNKNOWN` state handling, resolve endpoint | Done |
 | Milestone 1: two sample banks, `finsim/v1` minimal contract, payment state machine with `UNKNOWN`, fault injection, `finsim trace`, `finsim verify` | In progress |
 | Milestone 2: card authorize/capture/refund, virtual clock, ledger | Planned |

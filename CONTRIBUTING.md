@@ -39,7 +39,7 @@ We do not require a CLA. Instead, every commit must carry a `Signed-off-by: Your
 
 ## Local verification
 
-CI runs the same three checks on every pull request: a Spotless formatting check, the Gradle tests, and a DCO sign-off check on each commit. Run them locally before opening a pull request so avoidable CI failures are caught early.
+CI runs automated status checks on every pull request: Spotless formatting, Gradle test suite, DCO sign-off check, Spectral OpenAPI contract linting (`.spectral.yaml`), and the participant conformance test suite. Run verification scripts locally before opening a pull request so avoidable CI failures are caught early.
 
 ```bash
 # Linux/macOS/Git Bash

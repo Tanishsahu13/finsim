@@ -108,10 +108,9 @@ Minimal Spring Boot bank in `samples/bank-java` implementing the participant con
 FastAPI participant bank in `samples/bank-python` implementing the `finsim/v1` contract with `decimal.Decimal` arithmetic, in-memory accounts, idempotency store, and pytest verification suite.
 *Status:* Completed by @maestro-00 in [#37](https://github.com/mhnuk2007/finsim/pull/37). Closed [#12](https://github.com/mhnuk2007/finsim/issues/12).
 
-**21. Sample bank in Node** `[milestone-1]` `[help wanted]`
+**21. Sample bank in Node** `[milestone-1]` `[done]`
 Same behavior in Node/TypeScript, in a separate directory, no shared code.
-*Done when:* both banks pass the same verification and can transact with each other.
-*Issue:* [#11](https://github.com/mhnuk2007/finsim/issues/11)
+*Status:* Completed by @maestro-00 in [#41](https://github.com/mhnuk2007/finsim/pull/41). Closed [#11](https://github.com/mhnuk2007/finsim/issues/11).
 
 **22. CLI: `register`, `transfer`, `trace`, `fault`** `[milestone-1]` `[partially-done]`
 Commands that wrap the network API with human-readable output and `--json` raw machine-readable flag support.
@@ -149,4 +148,4 @@ Keep `docs/quickstart.md`, `docs/database.md`, `docs/registry.md`, `docs/contrac
 
 **28. Name and launch checks** `[milestone-1]` `[partially-done]`
 Name search, `SECURITY` contact, Code of Conduct file, issue and PR templates, 10 labeled good first issues.
-*Status:* 10 curated good first issues published on GitHub (#11 through #20) and documented in `docs/good-first-issues.md`. Issue and PR templates active. Maintainer governance checklist in progress.
+*Status:* 10 curated good first issues published on GitHub (#11 through #20) and documented in `docs/good-first-issues.md`. Issue and PR templates active. GitHub branch ruleset active on `main` enforcing required status checks and blocking force pushes. Maintainer governance checklist in progress.
