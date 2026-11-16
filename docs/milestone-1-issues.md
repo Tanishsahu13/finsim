@@ -20,9 +20,9 @@ Add Spring Modulith and ArchUnit checks so modules cannot touch each other's int
 PostgreSQL 17 + Flyway; base migration with common columns (`id`, `created_at`, `updated_at`, `version`); Testcontainers for automated tests, Docker Compose for local development. Strict PostgreSQL parity (no H2 fallback).
 *Status:* Completed. Flyway `V1__baseline.sql` and `V2__registry.sql` verified with Testcontainers and Compose.
 
-**4. Publish the contract** `[milestone-1]` `[in-progress]`
+**4. Publish the contract** `[milestone-1]` `[done]`
 Add `contract/finsim-v1.openapi.yaml`, validate it in CI, generate server stubs or models from it.
-*Status:* OpenAPI 3.1 specification written and verified against participant implementations.
+*Status:* Completed. OpenAPI 3.1 specification written and verified with Spectral in CI (closed [#14](https://github.com/mhnuk2007/finsim/issues/14) in [#42](https://github.com/mhnuk2007/finsim/pull/42)).
 
 ---
 

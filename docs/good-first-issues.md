@@ -23,7 +23,7 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 
 | Issue | Area | Description |
 |---|---|---|
-| **[#14](https://github.com/mhnuk2007/finsim/issues/14)** | CI / Tooling | **Lint the OpenAPI contract in CI**: Add Spectral linter to validate `contract/finsim-v1.openapi.yaml` in GitHub Actions. |
+| **[#14](https://github.com/mhnuk2007/finsim/issues/14)** *(Closed)* | CI / Tooling | ~~**Lint the OpenAPI contract in CI**~~ *(Completed by @Tanishsahu13 in [#42](https://github.com/mhnuk2007/finsim/pull/42))*: Added Spectral ruleset (`.spectral.yaml`) and dedicated `lint-contract` CI job. |
 | **[#15](https://github.com/mhnuk2007/finsim/issues/15)** *(Closed)* | `finsim-core` | ~~**Expand ISO 20022 return reason codes**~~ *(Completed by @Tanishsahu13 in [#21](https://github.com/mhnuk2007/finsim/pull/21))*: Added standard codes (`AC06`, `AG01`, `BE04`, `RC01`, `RR01`, `RR04`). |
 | **[#17](https://github.com/mhnuk2007/finsim/issues/17)** *(Closed)* | `finsim-cli` | ~~**Readable CLI output with a `--json` flag**~~ *(Completed by @Tanishsahu13 in [#35](https://github.com/mhnuk2007/finsim/pull/35))*: Added `--json` / `-j` options to all commands pinning raw JSON machine-readable output contract. |
 | **[#18](https://github.com/mhnuk2007/finsim/issues/18)** | `finsim-core` | **Property-based tests for `Money`**: Use `jqwik` to verify mathematical invariants (`plus`, `minus`, scale up to 8 decimal places, currency isolation) across thousands of random amounts. |
