@@ -6,6 +6,7 @@ archunit = "1.5.1"
 picocli = "4.7.7"
 spotless = "7.2.1"
 springdoc = "3.2.0"
+jqwik = "1.9.3"
 
 [libraries]
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -13,6 +14,7 @@ spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-b
 archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+jqwik = { module = "net.jqwik:jqwik", version.ref = "jqwik" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
