@@ -490,4 +490,110 @@ class TransferWorkflowTests {
     assertThat(res.statusCode()).isEqualTo(404);
     assertThat(JsonPath.<String>read(res.body(), "$.code")).isEqualTo("NOT_FOUND");
   }
+
+  @Test
+  @DisplayName(
+      "Issue #45: Destination credit definitively rejected during orchestration -> reverses source debit and completes rejection")
+  void orchestrationCreditRejectedExecutesReversalSuccessfully() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ORCH-REV");
+
+    // 1. Source debit succeeds
+    when(participantClient.applyLeg(
+            eq("http://localhost:9001"), argThat(k -> k != null && k.endsWith("-debit")), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-orch-1"));
+
+    // 2. Destination credit definitively rejected (e.g. AC04)
+    when(participantClient.applyLeg(
+            eq("http://localhost:9002"), argThat(k -> k != null && k.endsWith("-credit")), any()))
+        .thenReturn(PaymentCallOutcome.rejected("AC04", "Account closed"));
+
+    // 3. Compensating reversal leg to source succeeds
+    when(participantClient.applyLeg(eq("http://localhost:9001"), eq(key + ":rev"), any()))
+        .thenReturn(PaymentCallOutcome.completed("rev-orch-ok"));
+
+    HttpResponse<String> res = postTransfer("sandbox", key, payload);
+    assertThat(res.statusCode()).isEqualTo(201);
+
+    String txId = JsonPath.read(res.body(), "$.transactionId");
+    assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("REJECTED");
+    assertThat(JsonPath.<String>read(res.body(), "$.reasonCode")).isEqualTo("AC04");
+    assertThat(JsonPath.<String>read(res.body(), "$.emittedBy")).isEqualTo("DESTINATION");
+    assertThat(JsonPath.<Boolean>read(res.body(), "$.needsManualReview")).isFalse();
+
+    // Verify reversal was actually called with reversalOf = txId
+    verify(participantClient)
+        .applyLeg(
+            eq("http://localhost:9001"),
+            eq(key + ":rev"),
+            argThat(req -> txId.equals(req.reversalOf()) && "CREDIT".equals(req.direction())));
+  }
+
+  @Test
+  @DisplayName(
+      "Issue #45: Destination credit rejected and reversal times out -> stays UNKNOWN with REVERSE_DEBIT")
+  void orchestrationCreditRejectedReversalTimesOutMovesToUnknown() throws Exception {
+    String key = randomKey();
+    String payload =
+        transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ORCH-REV-TO");
+
+    when(participantClient.applyLeg(
+            eq("http://localhost:9001"), argThat(k -> k != null && k.endsWith("-debit")), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-orch-2"));
+    when(participantClient.applyLeg(
+            eq("http://localhost:9002"), argThat(k -> k != null && k.endsWith("-credit")), any()))
+        .thenReturn(PaymentCallOutcome.rejected("AC04", "Account closed"));
+
+    // Reversal call to source times out
+    when(participantClient.applyLeg(eq("http://localhost:9001"), eq(key + ":rev"), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Source reversal timeout"));
+
+    HttpResponse<String> res = postTransfer("sandbox", key, payload);
+    assertThat(res.statusCode()).isEqualTo(201);
+
+    String txId = JsonPath.read(res.body(), "$.transactionId");
+    assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("UNKNOWN");
+    assertThat(JsonPath.<String>read(res.body(), "$.pendingAction")).isEqualTo("REVERSE_DEBIT");
+    assertThat(JsonPath.<Boolean>read(res.body(), "$.needsManualReview")).isFalse();
+
+    verify(participantClient)
+        .applyLeg(
+            eq("http://localhost:9001"),
+            eq(key + ":rev"),
+            argThat(req -> txId.equals(req.reversalOf())));
+  }
+
+  @Test
+  @DisplayName(
+      "Issue #45: Destination credit rejected and reversal rejected by source -> stays UNKNOWN with needsManualReview")
+  void orchestrationCreditRejectedReversalRejectedBySourceFlagsManualReview() throws Exception {
+    String key = randomKey();
+    String payload =
+        transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "100.00", "REF-ORCH-REV-REJ");
+
+    when(participantClient.applyLeg(
+            eq("http://localhost:9001"), argThat(k -> k != null && k.endsWith("-debit")), any()))
+        .thenReturn(PaymentCallOutcome.completed("deb-orch-3"));
+    when(participantClient.applyLeg(
+            eq("http://localhost:9002"), argThat(k -> k != null && k.endsWith("-credit")), any()))
+        .thenReturn(PaymentCallOutcome.rejected("AC04", "Account closed"));
+
+    // Reversal call rejected by source bank
+    when(participantClient.applyLeg(eq("http://localhost:9001"), eq(key + ":rev"), any()))
+        .thenReturn(PaymentCallOutcome.rejected("BE04", "Account frozen"));
+
+    HttpResponse<String> res = postTransfer("sandbox", key, payload);
+    assertThat(res.statusCode()).isEqualTo(201);
+
+    String txId = JsonPath.read(res.body(), "$.transactionId");
+    assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("UNKNOWN");
+    assertThat(JsonPath.<String>read(res.body(), "$.pendingAction")).isEqualTo("REVERSE_DEBIT");
+    assertThat(JsonPath.<Boolean>read(res.body(), "$.needsManualReview")).isTrue();
+
+    verify(participantClient)
+        .applyLeg(
+            eq("http://localhost:9001"),
+            eq(key + ":rev"),
+            argThat(req -> txId.equals(req.reversalOf())));
+  }
 }

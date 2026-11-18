@@ -170,13 +170,18 @@ public class TransferOrchestrator {
               false,
               creditOutcome.errorMessage(),
               clock.instant());
-      case REJECTED ->
-          transfer.reject(
-              "credit_destination",
-              creditOutcome.reasonCode(),
-              Emitter.DESTINATION,
-              creditOutcome.errorMessage(),
-              clock.instant());
+      case REJECTED -> {
+        // Destination definitively rejected credit after debit succeeded.
+        // Move to UNKNOWN with REVERSE_DEBIT so compensating reversal can be safely executed.
+        transfer.markUnknown(
+            "credit_destination",
+            PendingAction.REVERSE_DEBIT,
+            false,
+            creditOutcome.errorMessage(),
+            clock.instant());
+        persistTransfer(transfer);
+        return executeReversal(transfer, fromInst, creditOutcome.reasonCode());
+      }
     }
 
     persistTransfer(transfer);
