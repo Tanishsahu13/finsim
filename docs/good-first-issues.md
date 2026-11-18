@@ -27,8 +27,9 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | **[#15](https://github.com/mhnuk2007/finsim/issues/15)** *(Closed)* | `finsim-core` | ~~**Expand ISO 20022 return reason codes**~~ *(Completed by @Tanishsahu13 in [#21](https://github.com/mhnuk2007/finsim/pull/21))*: Added standard codes (`AC06`, `AG01`, `BE04`, `RC01`, `RR01`, `RR04`). |
 | **[#17](https://github.com/mhnuk2007/finsim/issues/17)** *(Closed)* | `finsim-cli` | ~~**Readable CLI output with a `--json` flag**~~ *(Completed by @Tanishsahu13 in [#35](https://github.com/mhnuk2007/finsim/pull/35))*: Added `--json` / `-j` options to all commands pinning raw JSON machine-readable output contract. |
 | **[#18](https://github.com/mhnuk2007/finsim/issues/18)** *(Closed)* | `finsim-core` | ~~**Property-based tests for `Money`**~~ *(Completed by @AjayVelanchery in [#47](https://github.com/mhnuk2007/finsim/pull/47))*: Added `jqwik` property-based tests verifying monetary arithmetic invariants, addition commutativity, identity, currency isolation, and scale preservation across 1,000 tries per property. |
-| **[#20](https://github.com/mhnuk2007/finsim/issues/20)** *(Closed)* | Tooling / Git | ~~**Pre-commit and commit-msg hooks with verify script**~~ *(Completed by @Tanishsahu13 in [#38](https://github.com/mhnuk2007/finsim/pull/38))*: Added cross-platform `scripts/verify.sh`, `scripts/verify.ps1`, and optional `.githooks/pre-commit`. |
 | **[#29](https://github.com/mhnuk2007/finsim/issues/29)** | Next.js 16 / Web | **Next.js 16 web workspace scaffold, design system and base shell**: Initialize `/web` with Next.js 16, React 19, Tailwind CSS v4, Lucide, semantic color tokens, and decoupled mock fixtures. |
+| **[#53](https://github.com/mhnuk2007/finsim/issues/53)** | `finsim-core` | **Domain ReasonCode missing ISO 20022 code AM03**: Add `AM03` ("Unsupported Currency") to `ReasonCode` enum with test coverage. |
+| **[#54](https://github.com/mhnuk2007/finsim/issues/54)** | `finsim-cli` | **CLI subcommands reject --help flag**: Enable standard Picocli help options (`mixinStandardHelpOptions = true`) across subcommands. |
 
 ---
 
@@ -68,8 +69,28 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | Issue | Area | Description |
 |---|---|---|
 | **[#19](https://github.com/mhnuk2007/finsim/issues/19)** | DevOps / Compose | **Dockerfiles and full Docker Compose stack**: Multi-stage Docker builds for `finsim-api` and `samples/bank-java` (`bank-a` and `bank-b`), enabling `docker compose up --build` with no local Java installation needed. |
+| **[#20](https://github.com/mhnuk2007/finsim/issues/20)** *(Closed)* | Tooling / Git | ~~**Pre-commit and commit-msg hooks with verify script**~~ *(Completed by @Tanishsahu13 in [#38](https://github.com/mhnuk2007/finsim/pull/38))*: Added cross-platform `scripts/verify.sh`, `scripts/verify.ps1`, and optional `.githooks/pre-commit`. |
 
 ---
+
+### Community Bug Triage & Audit Issues
+*Recently reported by contributors and open for community contribution under the 10-day reservation window.*
+
+| Issue | Area | Description |
+|---|---|---|
+| **[#46](https://github.com/mhnuk2007/finsim/issues/46)** | Database / Precision | **Database monetary rounding**: Investigate column precision/scale handling for monetary amounts exceeding 4 decimal places. |
+| **[#48](https://github.com/mhnuk2007/finsim/issues/48)** | `finsim-api` | **`@Transactional` proxy self-invocation**: Separate `persistTransfer` onto a distinct transactional helper bean. |
+| **[#52](https://github.com/mhnuk2007/finsim/issues/52)** | `finsim-api` | **ParticipantClient HTTP 4xx error parsing**: Ensure HTTP 422 leg rejections parse into `PaymentCallOutcome.rejected` instead of suppressing as completed. |
+| **[#55](https://github.com/mhnuk2007/finsim/issues/55)** | `finsim-cli` | **CLI URI encoding**: Ensure URL path variables in CLI `FinSimClient` are properly encoded. |
+| **[#56](https://github.com/mhnuk2007/finsim/issues/56)** | CI / Tooling | **CI DCO sign-off fetch depth**: Increase `fetch-depth` in `actions/checkout` for pull requests to validate all commit authors. |
+| **[#57](https://github.com/mhnuk2007/finsim/issues/57)** | Samples | **Sample banks generic 404 vs leg error**: Distinguish generic route 404 from specific `LEG_NOT_FOUND` in Python & Node banks. |
+| **[#58](https://github.com/mhnuk2007/finsim/issues/58)** | Conformance CI | **Matrix conformance workflow**: Expand `conformance.yml` matrix to execute tests across Java, Python, and Node sample banks. |
+| **[#59](https://github.com/mhnuk2007/finsim/issues/59)** | Contract / Docs | **OpenAPI Error schema separation**: Disentangle `ApiErrorCode` from domain `ReasonCode` in OpenAPI spec. |
+| **[#60](https://github.com/mhnuk2007/finsim/issues/60)** | `finsim-registry` | **Network member validation**: Add validation for missing `institutionId` on network join returning HTTP 400 instead of 500. |
+| **[#61](https://github.com/mhnuk2007/finsim/issues/61)** | `finsim-registry` | **Base URL trailing-slash normalization**: Normalize base URLs during institution registration idempotency check. |
+| **[#62](https://github.com/mhnuk2007/finsim/issues/62)** | Database | **Database schema migration cleanup**: Clean unmapped legacy table in Flyway baseline migration. |
+| **[#63](https://github.com/mhnuk2007/finsim/issues/63)** | Contract / OpenAPI | **Registry endpoints in OpenAPI**: Document administrative registry REST endpoints in `contract/finsim-v1.openapi.yaml`. |
+| **[#64](https://github.com/mhnuk2007/finsim/issues/64)** | `finsim-api` | **Malformed JSON exception handling**: Add `HttpMessageNotReadableException` handler in `TransferExceptionHandler` returning standard `ApiError`. |
 
 ## How to Contribute
 
