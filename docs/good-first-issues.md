@@ -91,6 +91,8 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | **[#62](https://github.com/mhnuk2007/finsim/issues/62)** | Database | **Database schema migration cleanup**: Clean unmapped legacy table in Flyway baseline migration. |
 | **[#63](https://github.com/mhnuk2007/finsim/issues/63)** | Contract / OpenAPI | **Registry endpoints in OpenAPI**: Document administrative registry REST endpoints in `contract/finsim-v1.openapi.yaml`. |
 | **[#64](https://github.com/mhnuk2007/finsim/issues/64)** | `finsim-api` | **Malformed JSON exception handling**: Add `HttpMessageNotReadableException` handler in `TransferExceptionHandler` returning standard `ApiError`. |
+| **[#67](https://github.com/mhnuk2007/finsim/issues/67)** | `finsim-api` / `finsim-registry` | **Network existence validation on transfer**: Verify network exists and return HTTP 404 (`NETWORK_NOT_FOUND`) instead of creating orphaned transfer. |
+| **[#68](https://github.com/mhnuk2007/finsim/issues/68)** | `finsim-api` / `finsim-core` | **CapabilityNotSupported reason code**: Distinguish missing capabilities as `ReasonCode.CAPABILITY_NOT_SUPPORTED` instead of masking as `ROUTING_ERROR`. |
 
 ## How to Contribute
 
