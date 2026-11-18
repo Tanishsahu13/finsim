@@ -58,7 +58,7 @@ Transfer aggregate root with 10 strictly permitted transitions across `CREATED`,
 
 **11. Transfer workflow: debit then credit** `[milestone-1]` `[done]`
 Orchestrate `DEBIT` at source institution, then `CREDIT` at destination institution over HTTP, using stage-level idempotency keys derived deterministically from the transaction id.
-*Status:* Completed. Implemented in `TransferOrchestrator` and `ParticipantClient`, verified across 16 scenarios in `TransferWorkflowTests`.
+*Status:* Completed. Implemented in `TransferOrchestrator` and `ParticipantClient`, verified across 19 scenarios in `TransferWorkflowTests` (including automatic compensating source debit reversal on destination credit rejection, closed [#45](https://github.com/mhnuk2007/finsim/issues/45) in [#50](https://github.com/mhnuk2007/finsim/pull/50)).
 
 **12. Timeout handling and `UNKNOWN`** `[milestone-1]` `[done]`
 A timed-out outbound call moves the transfer to `UNKNOWN` (never `REJECTED`). Retrying the transfer while `UNKNOWN` returns `409 RECONCILIATION_REQUIRED`.
