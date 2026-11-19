@@ -53,7 +53,7 @@ public class TransferEntity {
   @Column(name = "to_account", nullable = false, length = 64)
   private String toAccount;
 
-  @Column(name = "amount", nullable = false, precision = 18, scale = 4)
+  @Column(name = "amount", nullable = false, precision = 22, scale = 8)
   private BigDecimal amount;
 
   @Column(name = "currency", nullable = false, length = 3)
