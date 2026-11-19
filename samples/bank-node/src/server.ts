@@ -4,11 +4,13 @@ import { Bank } from "./bank.js";
 
 const invalid = (message = "Malformed or incomplete request."): ErrorBody => ({ code: "INVALID_REQUEST", message });
 const notFound: ErrorBody = { code: "LEG_NOT_FOUND", message: "This institution has no record of that leg." };
+const endpointNotFound: ErrorBody = { code: "NOT_FOUND", message: "Endpoint not found." };
 
 export function buildApp(bank = new Bank()): FastifyInstance {
   const app = Fastify({ logger: true });
+  app.setNotFoundHandler((_request, reply) => reply.code(404).send(endpointNotFound));
   app.setErrorHandler((err: FastifyError, _request, reply) => {
-    if (err.statusCode === 404) return reply.code(404).send(notFound);
+    if (err.statusCode === 404) return reply.code(404).send(endpointNotFound);
     if (err.statusCode === 400) return reply.code(400).send(invalid());
     app.log.error(err);
     return reply.code(500).send({ code: "INTERNAL_ERROR", message: "Internal server error." });

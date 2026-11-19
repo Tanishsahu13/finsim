@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app import app, bank
@@ -10,6 +11,13 @@ client = TestClient(app)
 
 def setup_function() -> None:
     bank.__init__()
+
+
+@pytest.mark.parametrize("method,path", [("GET", "/invalid-endpoint"), ("POST", "/invalid-endpoint"), ("GET", "/favicon.ico")])
+def test_unknown_routes_return_generic_errors(method, path):
+    response = client.request(method, path)
+    assert response.status_code == 404
+    assert response.json() == {"code": "NOT_FOUND", "message": "Endpoint not found."}
 
 
 def payload(tx="tx-1", direction="DEBIT", account="ACC-1", amount="100.00", **extra):
@@ -41,7 +49,9 @@ def test_debit_credit_and_status():
     )
     assert debit.status_code == credit.status_code == 201
     assert debit.json()["status"] == credit.json()["status"] == "COMPLETED"
-    assert client.get("/finsim/v1/payments/tx-1?leg=DEBIT").json()["status"] == "COMPLETED"
+    status = client.get("/finsim/v1/payments/tx-1?leg=DEBIT")
+    assert status.status_code == 200
+    assert status.json() == debit.json()
 
 
 def test_rejections_are_remembered_and_balances_are_unchanged():
@@ -72,8 +82,11 @@ def test_validation_and_not_found_errors():
         "/finsim/v1/payments", headers={"Idempotency-Key": "invalid-1"}, json=payload(provenance="REAL")
     )
     assert invalid.status_code == 400 and invalid.json()["code"] == "INVALID_REQUEST"
-    assert client.get("/finsim/v1/payments/nope?leg=CREDIT").status_code == 404
-    assert client.get("/finsim/v1/payments/nope?leg=BAD").status_code == 400
+    missing = client.get("/finsim/v1/payments/nope?leg=CREDIT")
+    assert missing.status_code == 404
+    assert missing.json() == {"code": "LEG_NOT_FOUND", "message": "This institution has no record of that leg."}
+    invalid_leg = client.get("/finsim/v1/payments/nope?leg=BAD")
+    assert invalid_leg.status_code == 400 and invalid_leg.json()["code"] == "INVALID_REQUEST"
 
 
 def test_amount_currency_and_key_validation():

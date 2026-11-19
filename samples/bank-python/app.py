@@ -249,7 +249,7 @@ async def validation_exception_handler(_request: Request, exc: RequestValidation
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
     if exc.status_code == 404:
-        return contract_error("LEG_NOT_FOUND", "This institution has no record of that leg.", 404)
+        return contract_error("NOT_FOUND", "Endpoint not found.", 404)
     return contract_error("INVALID_REQUEST", str(exc.detail), exc.status_code)
 
 
