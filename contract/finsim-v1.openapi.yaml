@@ -377,7 +377,10 @@ components:
         transactionId: { type: string }
         state: { $ref: "#/components/schemas/TransferState" }
         currentStage: { type: string, examples: [credit_destination] }
-        reasonCode: { type: string }
+        reasonCode:
+          type: string
+          description: Rejection reason code when state is REJECTED. Uses ISO 20022 reason codes where one exists.
+          examples: [AC04, AM04, DUPL, FINSIM_TIMEOUT, ROUTING_ERROR]
         emittedBy: { type: string, enum: [FINSIM, SOURCE, DESTINATION] }
         pendingAction:
           type: string
@@ -445,8 +448,11 @@ components:
       properties:
         code:
           type: string
-          description: Machine-readable code. Rejections use ISO 20022-style reason codes where one exists.
-          examples: [AC04, AM04, DUPL, RECONCILIATION_REQUIRED, IDEMPOTENCY_CONFLICT, FINSIM_TIMEOUT]
+          description: |
+            Machine-readable API error code for an HTTP 4xx/5xx response. A transfer that is
+            rejected during orchestration is not an Error: it is returned as a Transfer with
+            state REJECTED and a reasonCode.
+          examples: [BAD_REQUEST, IDEMPOTENCY_CONFLICT, RECONCILIATION_REQUIRED, NOT_FOUND]
         message: { type: string }
         stage: { type: string }
         emittedBy: { type: string, enum: [FINSIM, SOURCE, DESTINATION] }
