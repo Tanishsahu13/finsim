@@ -30,6 +30,7 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | **[#29](https://github.com/mhnuk2007/finsim/issues/29)** | Next.js 16 / Web | **Next.js 16 web workspace scaffold, design system and base shell**: Initialize `/web` with Next.js 16, React 19, Tailwind CSS v4, Lucide, semantic color tokens, and decoupled mock fixtures. |
 | **[#53](https://github.com/mhnuk2007/finsim/issues/53)** | `finsim-core` | **Domain ReasonCode missing ISO 20022 code AM03**: Add `AM03` ("Unsupported Currency") to `ReasonCode` enum with test coverage. |
 | **[#54](https://github.com/mhnuk2007/finsim/issues/54)** | `finsim-cli` | **CLI subcommands reject --help flag**: Enable standard Picocli help options (`mixinStandardHelpOptions = true`) across subcommands. |
+| **[#74](https://github.com/mhnuk2007/finsim/issues/74)** | Brand / Design | **Design official logo and visual identity for FinSim**: Create scalable vector (SVG) wordmark, icon-only mark, and dark/light variations. |
 
 ---
 
