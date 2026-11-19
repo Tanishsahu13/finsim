@@ -78,12 +78,12 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 
 | Issue | Area | Description |
 |---|---|---|
-| **[#46](https://github.com/mhnuk2007/finsim/issues/46)** | Database / Precision | **Database monetary rounding**: Investigate column precision/scale handling for monetary amounts exceeding 4 decimal places. |
+| **[#46](https://github.com/mhnuk2007/finsim/issues/46)** *(Closed)* | Database / Precision | ~~**Database monetary rounding**~~ *(Completed by @Tanishsahu13 in [#66](https://github.com/mhnuk2007/finsim/pull/66))*: Widened `transfers.amount` to `NUMERIC(22, 8)` via Flyway migration `V3` and verified round-trip precision. |
 | **[#48](https://github.com/mhnuk2007/finsim/issues/48)** | `finsim-api` | **`@Transactional` proxy self-invocation**: Separate `persistTransfer` onto a distinct transactional helper bean. |
 | **[#52](https://github.com/mhnuk2007/finsim/issues/52)** | `finsim-api` | **ParticipantClient HTTP 4xx error parsing**: Ensure HTTP 422 leg rejections parse into `PaymentCallOutcome.rejected` instead of suppressing as completed. |
 | **[#55](https://github.com/mhnuk2007/finsim/issues/55)** | `finsim-cli` | **CLI URI encoding**: Ensure URL path variables in CLI `FinSimClient` are properly encoded. |
 | **[#56](https://github.com/mhnuk2007/finsim/issues/56)** | CI / Tooling | **CI DCO sign-off fetch depth**: Increase `fetch-depth` in `actions/checkout` for pull requests to validate all commit authors. |
-| **[#57](https://github.com/mhnuk2007/finsim/issues/57)** | Samples | **Sample banks generic 404 vs leg error**: Distinguish generic route 404 from specific `LEG_NOT_FOUND` in Python & Node banks. |
+| **[#57](https://github.com/mhnuk2007/finsim/issues/57)** *(Closed)* | Samples | ~~**Sample banks generic 404 vs leg error**~~ *(Completed by @dansonofbass in [#70](https://github.com/mhnuk2007/finsim/pull/70))*: Distinguish generic route 404 from specific `LEG_NOT_FOUND` in Python & Node banks. |
 | **[#58](https://github.com/mhnuk2007/finsim/issues/58)** | Conformance CI | **Matrix conformance workflow**: Expand `conformance.yml` matrix to execute tests across Java, Python, and Node sample banks. |
 | **[#59](https://github.com/mhnuk2007/finsim/issues/59)** | Contract / Docs | **OpenAPI Error schema separation**: Disentangle `ApiErrorCode` from domain `ReasonCode` in OpenAPI spec. |
 | **[#60](https://github.com/mhnuk2007/finsim/issues/60)** | `finsim-registry` | **Network member validation**: Add validation for missing `institutionId` on network join returning HTTP 400 instead of 500. |
