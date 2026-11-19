@@ -94,6 +94,14 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | **[#64](https://github.com/mhnuk2007/finsim/issues/64)** | `finsim-api` | **Malformed JSON exception handling**: Add `HttpMessageNotReadableException` handler in `TransferExceptionHandler` returning standard `ApiError`. |
 | **[#67](https://github.com/mhnuk2007/finsim/issues/67)** | `finsim-api` / `finsim-registry` | **Network existence validation on transfer**: Verify network exists and return HTTP 404 (`NETWORK_NOT_FOUND`) instead of creating orphaned transfer. |
 | **[#68](https://github.com/mhnuk2007/finsim/issues/68)** | `finsim-api` / `finsim-core` | **CapabilityNotSupported reason code**: Distinguish missing capabilities as `ReasonCode.CAPABILITY_NOT_SUPPORTED` instead of masking as `ROUTING_ERROR`. |
+| **[#77](https://github.com/mhnuk2007/finsim/issues/77)** | `finsim-cli` | **CLI capabilities whitespace trimming**: Trim tokens in comma-delimited `--capabilities` argument to prevent HTTP 400. |
+| **[#78](https://github.com/mhnuk2007/finsim/issues/78)** | `finsim-registry` | **Institution suspended exception**: Differentiate suspended participants with a dedicated exception instead of `CapabilityNotSupported`. |
+| **[#79](https://github.com/mhnuk2007/finsim/issues/79)** | `finsim-api` / `finsim-core` | **External rejection code collision resilience**: Safely handle external participant reason codes that match API error code names without throwing unhandled `IllegalArgumentException`. |
+| **[#80](https://github.com/mhnuk2007/finsim/issues/80)** | `finsim-api` | **TransferRequest blank field validation**: Enforce `@NotBlank` on `institutionId` and `accountReference` so empty strings yield HTTP 400 instead of 500. |
+| **[#81](https://github.com/mhnuk2007/finsim/issues/81)** | `finsim-api` | **Currency casing and scale validation**: Validate currency format (3 uppercase letters) and max scale (8) at the controller layer returning HTTP 400. |
+| **[#82](https://github.com/mhnuk2007/finsim/issues/82)** | `finsim-api` | **Outbound source debit timeout pending action**: Align source debit timeout handling with ADR 0001 (schedule query/reconciliation rather than pre-emptive `REVERSE_DEBIT`). |
+| **[#83](https://github.com/mhnuk2007/finsim/issues/83)** | `finsim-api` | **ParticipantClient HTTP 400/409 classification**: Classify participant 400 and 409 responses as definitive `REJECTED` instead of ambiguous `TIMED_OUT`. |
+| **[#84](https://github.com/mhnuk2007/finsim/issues/84)** | `finsim-api` / Concurrency | **Concurrent /resolve locking**: Guard `/resolve` against concurrent double-execution with database locking or optimistic lock retry. |
 
 ## How to Contribute
 
