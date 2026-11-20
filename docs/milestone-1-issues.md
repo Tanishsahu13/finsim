@@ -72,10 +72,9 @@ A timed-out outbound call moves the transfer to `UNKNOWN` (never `REJECTED`). Re
 Standardized reason code registry (ISO 20022 codes like `AC01`, `AC04`, `AM02`, `AM04`, `DUPL`, `MS03`, plus FinSim platform codes). Every rejection must carry a reason code and emitter (`SOURCE`, `DESTINATION`, `FINSIM`).
 *Status:* Completed. Enums, ISO code validation, and end-to-end propagation from participant responses verified. Domain rejection reason codes explicitly separated from API error codes in OpenAPI contract and documentation (closed [#59](https://github.com/mhnuk2007/finsim/issues/59) in [#72](https://github.com/mhnuk2007/finsim/pull/72)).
 
-**15. Property-based test: no duplicate effects** `[milestone-1]`
+**15. Property-based test: no duplicate effects** `[milestone-1]` `[done]`
 Random sequences of duplicate requests, timeouts, and retries never change balances more than once per transfer.
-*Done when:* the property holds across thousands of generated cases in CI, including repeated `resolve` calls and reversal timeouts (see ADR 0001).
-*Issue:* [#24](https://github.com/mhnuk2007/finsim/issues/24)
+*Status:* Completed in [#94](https://github.com/mhnuk2007/finsim/pull/94) (closed [#24](https://github.com/mhnuk2007/finsim/issues/24)). Implemented `TransferConservationPropertyTest` with `net.jqwik:jqwik` verifying conservation of value ($\text{Balance}_A + \text{Balance}_B + \text{InTransit Funds} \equiv \text{Initial}_A + \text{Initial}_B$), terminal state purity (`COMPLETED`, `REJECTED`, `UNKNOWN`), and idempotent replay invariance across thousands of randomized chaos sequences.
 
 ---
 
@@ -113,7 +112,7 @@ Same behavior in Node/TypeScript, in a separate directory, no shared code.
 
 **22. CLI: `register`, `transfer`, `trace`, `fault`** `[milestone-1]` `[partially-done]`
 Commands that wrap the network API with human-readable output and `--json` raw machine-readable flag support.
-*Status:* Registry commands (`register`, `institutions`, `networks`, `join`) completed with client and `--json` / `-j` flag handling (closed [#17](https://github.com/mhnuk2007/finsim/issues/17) in [#35](https://github.com/mhnuk2007/finsim/pull/35)). Transfer, trace, and fault subcommands pending payment workflow API.
+*Status:* Registry commands (`register`, `institutions`, `networks`, `join`) completed with client and `--json` / `-j` flag handling (closed [#17](https://github.com/mhnuk2007/finsim/issues/17) in [#35](https://github.com/mhnuk2007/finsim/pull/35)). Standard `--help` and `-h` support added across all eight subcommands in [#93](https://github.com/mhnuk2007/finsim/pull/93) (closed [#54](https://github.com/mhnuk2007/finsim/issues/54)). Transfer, trace, and fault subcommands pending payment workflow API.
 
 **23. CLI: `finsim verify --url`** `[milestone-1]` `[done]`
 Check health, capabilities, debit and credit, idempotent replay, idempotency conflict, status query, and error shape. Actionable messages: which check failed, why, how to fix.
