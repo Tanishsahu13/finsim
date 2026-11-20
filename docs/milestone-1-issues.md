@@ -62,11 +62,11 @@ Orchestrate `DEBIT` at source institution, then `CREDIT` at destination institut
 
 **12. Timeout handling and `UNKNOWN`** `[milestone-1]` `[done]`
 A timed-out outbound call moves the transfer to `UNKNOWN` (never `REJECTED`). Retrying the transfer while `UNKNOWN` returns `409 RECONCILIATION_REQUIRED`.
-*Status:* Completed. Verified state transition to `UNKNOWN`, pendingAction population, and retry blocking with HTTP 409.
+*Status:* Completed. Verified state transition to `UNKNOWN`, pendingAction population (aligned with ADR 0001 in [#91](https://github.com/mhnuk2007/finsim/pull/91) to set `NONE` on initial debit timeout, closing [#82](https://github.com/mhnuk2007/finsim/issues/82)), participant 400/409 classification (closed [#83](https://github.com/mhnuk2007/finsim/issues/83)), and retry blocking with HTTP 409.
 
 **13. Resolve endpoint** `[milestone-1]` `[done]`
 `POST /api/v1/transfers/{id}/resolve` queries each leg via `GET /finsim/v1/payments/{id}` and applies the decision table in [ADR 0001](adr/0001-resolving-unknown-transfers.md): re-send a lost credit with the same idempotency key, reverse the debit only after a definitive rejection, never guess.
-*Status:* Completed. Implemented in `TransferOrchestrator.resolve` and `TransferController`, covering all decision table rows with dedicated scenario tests.
+*Status:* Completed. Implemented in `TransferOrchestrator.resolve` and `TransferController`, covering all decision table rows with dedicated scenario tests. Hardened against concurrent resolve race conditions and optimistic lock failure in [#91](https://github.com/mhnuk2007/finsim/pull/91) (closing [#84](https://github.com/mhnuk2007/finsim/issues/84)).
 
 **14. Reason codes** `[milestone-1]` `[done]` `[gfi]`
 Standardized reason code registry (ISO 20022 codes like `AC01`, `AC04`, `AM02`, `AM04`, `DUPL`, `MS03`, plus FinSim platform codes). Every rejection must carry a reason code and emitter (`SOURCE`, `DESTINATION`, `FINSIM`).
