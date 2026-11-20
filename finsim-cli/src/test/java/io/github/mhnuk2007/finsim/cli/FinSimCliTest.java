@@ -66,6 +66,31 @@ class FinSimCliTest {
   }
 
   @Test
+  void everySubcommandAcceptsHelp() {
+    for (String subcommand :
+        List.of(
+            "register",
+            "institutions",
+            "networks",
+            "join",
+            "verify",
+            "transfer",
+            "trace",
+            "fault")) {
+      Result result = run(subcommand, "--help");
+      assertThat(result.exit()).isZero();
+      assertThat(result.out()).contains("Usage: finsim " + subcommand);
+    }
+  }
+
+  @Test
+  void shortHelpFlagWorksOnASubcommand() {
+    Result result = run("register", "-h");
+    assertThat(result.exit()).isZero();
+    assertThat(result.out()).contains("Usage: finsim register");
+  }
+
+  @Test
   void plannedSubcommandsReturnNotImplementedUntilBuilt() {
     assertThat(run("verify").exit()).isEqualTo(FinSimCli.EXIT_NOT_IMPLEMENTED);
   }
