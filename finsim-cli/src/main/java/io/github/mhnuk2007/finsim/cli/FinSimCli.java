@@ -198,9 +198,61 @@ public class FinSimCli implements Runnable {
     }
   }
 
-  /** Placeholder: contract checks arrive with milestone 1, issue 20. */
+  /** Runs the public participant contract checks. */
   @Command(name = "verify", description = "Check an institution against the finsim/v1 contract.")
-  static class Verify extends NotImplemented {}
+  static class Verify implements Callable<Integer> {
+    @Spec CommandSpec spec;
+
+    @Option(names = "--url", required = true, description = "Participant base URL.")
+    String url;
+
+    @Option(names = "--verbose", description = "Show sanitized HTTP exchanges.")
+    boolean verbose;
+
+    @Option(
+        names = {"--json", "-j"},
+        description = "Output machine-readable results.")
+    boolean json;
+
+    @Option(
+        names = "--timeout-ms",
+        defaultValue = "5000",
+        description = "Request timeout in milliseconds.")
+    int timeoutMs;
+
+    @Override
+    public Integer call() {
+      if (timeoutMs <= 0 || !ParticipantVerifier.validUrl(url)) {
+        spec.commandLine().getErr().println("Invalid --url or --timeout-ms (must be positive).");
+        return CommandLine.ExitCode.USAGE;
+      }
+      if (!json)
+        spec.commandLine()
+            .getOut()
+            .println("Warning: successful checks can change synthetic account balances.");
+      var result = new ParticipantVerifier(url, timeoutMs, verbose).run();
+      if (json) {
+        spec.commandLine().getOut().println(ParticipantVerifier.json(result));
+        if (!result.passed())
+          spec.commandLine().getErr().println("Participant verification failed.");
+      } else {
+        spec.commandLine()
+            .getOut()
+            .println("FinSim Participant Conformance Verification\nTarget: " + url);
+        for (var phase : result.phases()) {
+          spec.commandLine().getOut().println("[" + phase.status() + "] " + phase.name());
+          for (String detail : phase.details()) spec.commandLine().getOut().println("  " + detail);
+        }
+        spec.commandLine()
+            .getOut()
+            .println(
+                result.passed()
+                    ? "All 7 conformance phases PASSED."
+                    : "Participant verification FAILED.");
+      }
+      return result.passed() ? 0 : EXIT_FAILED;
+    }
+  }
 
   /** Placeholder: arrives with milestone 1, issue 19. */
   @Command(name = "transfer", description = "Start a transfer between two institutions.")

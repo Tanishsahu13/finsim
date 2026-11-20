@@ -66,8 +66,25 @@ class FinSimCliTest {
   }
 
   @Test
-  void plannedSubcommandsReturnNotImplementedUntilBuilt() {
-    assertThat(run("verify").exit()).isEqualTo(FinSimCli.EXIT_NOT_IMPLEMENTED);
+  void verifyRequiresParticipantUrl() {
+    assertThat(run("verify").exit()).isEqualTo(CommandLine.ExitCode.USAGE);
+  }
+
+  @Test
+  void verifyValidatesUrlAndTimeoutBeforeSendingRequests() {
+    assertThat(run("verify", "--url", "file:///tmp/bank").exit())
+        .isEqualTo(CommandLine.ExitCode.USAGE);
+    assertThat(run("verify", "--url", "http://localhost:1", "--timeout-ms", "0").exit())
+        .isEqualTo(CommandLine.ExitCode.USAGE);
+  }
+
+  @Test
+  void verifyJsonFailureIsMachineReadableAndReturnsOne() {
+    Result result = run("verify", "--url", "http://localhost:1", "--json", "--timeout-ms", "100");
+    assertThat(result.exit()).isEqualTo(FinSimCli.EXIT_FAILED);
+    assertThat(ContractJson.parse(result.out().strip())).isInstanceOf(java.util.Map.class);
+    assertThat(result.out()).doesNotContain("[FAIL]").doesNotContain("Warning:");
+    assertThat(result.err()).contains("failed");
   }
 
   @Test
