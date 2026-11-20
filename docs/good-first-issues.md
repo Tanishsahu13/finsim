@@ -31,6 +31,8 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | **[#53](https://github.com/mhnuk2007/finsim/issues/53)** | `finsim-core` | **Domain ReasonCode missing ISO 20022 code AM03**: Add `AM03` ("Unsupported Currency") to `ReasonCode` enum with test coverage. |
 | **[#54](https://github.com/mhnuk2007/finsim/issues/54)** *(Closed)* | `finsim-cli` | ~~**CLI subcommands reject --help flag**~~ *(Completed by @Tanishsahu13 in [#93](https://github.com/mhnuk2007/finsim/pull/93))*: Enabled standard Picocli help options (`mixinStandardHelpOptions = true`) across all eight subcommands with unit test coverage. |
 | **[#74](https://github.com/mhnuk2007/finsim/issues/74)** | Brand / Design | **Design official logo and visual identity for FinSim**: Create scalable vector (SVG) wordmark, icon-only mark, and dark/light variations. |
+| **[#98](https://github.com/mhnuk2007/finsim/issues/98)** | `finsim-api` | **`FaultRuleEntity.setRemainingCount()` bypasses injected `Clock`**: Update `FaultRuleEntity.setRemainingCount` to accept an explicit `Instant` derived from the injected application `Clock`, preserving virtual clock determinism and replayability under [#27](https://github.com/mhnuk2007/finsim/issues/27). |
+| **[#100](https://github.com/mhnuk2007/finsim/issues/100)** | `finsim-registry` | **`RegistryExceptionHandler` advice controller target**: Point `basePackageClasses` in `RegistryExceptionHandler` to `{InstitutionController.class, NetworkController.class}` instead of self-referencing `RegistryExceptionHandler.class`. |
 
 ---
 
@@ -102,6 +104,7 @@ To keep documentation from drifting, **the active [GitHub Issues](https://github
 | **[#82](https://github.com/mhnuk2007/finsim/issues/82)** *(Closed)* | `finsim-api` | ~~**Outbound source debit timeout pending action**~~ *(Completed in [#91](https://github.com/mhnuk2007/finsim/pull/91))*: Aligned source debit timeout handling with ADR 0001 (sets `PendingAction.NONE` awaiting status query during resolution rather than pre-emptive `REVERSE_DEBIT`). |
 | **[#83](https://github.com/mhnuk2007/finsim/issues/83)** *(Closed)* | `finsim-api` | ~~**ParticipantClient HTTP 400/409 classification**~~ *(Completed in [#91](https://github.com/mhnuk2007/finsim/pull/91))*: Classify participant 400 and 409 responses as definitive `PaymentCallOutcome.rejected` instead of ambiguous `TIMED_OUT`. |
 | **[#84](https://github.com/mhnuk2007/finsim/issues/84)** *(Closed)* | `finsim-api` / Concurrency | ~~**Concurrent /resolve locking**~~ *(Completed in [#91](https://github.com/mhnuk2007/finsim/pull/91))*: Protected `/resolve` against concurrent double-execution with state reload fallback and 409 `IDEMPOTENCY_CONFLICT` exception mapping. |
+| **[#99](https://github.com/mhnuk2007/finsim/issues/99)** | `finsim-api` / `finsim-sim` | **Fault rule trigger decrement lifecycle**: Evaluate fault rule trigger count decrement boundaries against OpenAPI contract definitions (`times`: cap on calls affected) and transaction boundaries across external participant calls. |
 
 ## How to Contribute
 
