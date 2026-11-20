@@ -31,6 +31,8 @@ public enum ReasonCode {
    */
   AG01("AG01", "Transaction forbidden on this type of account", true),
   AM02("AM02", "Transaction amount outside allowed limits", true),
+  /** ISO 20022 {@code AM03} (NotAllowedCurrency): currency is not supported. */
+  AM03("AM03", "Unsupported currency", true),
   AM04("AM04", "Insufficient funds", true),
   /**
    * ISO 20022 {@code BE04} (MissingCreditorAddress): required creditor address is missing or

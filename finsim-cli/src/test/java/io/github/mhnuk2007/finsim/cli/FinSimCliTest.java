@@ -142,6 +142,19 @@ class FinSimCliTest {
   }
 
   @Test
+  void registerTrimsWhitespaceFromCapabilities() {
+    String body =
+        FinSimCli.Register.body(
+            "my-bank",
+            "My Bank",
+            "BANK",
+            "http://localhost:9100",
+            List.of(" ACCOUNT_DEBIT ", "  ACCOUNT_CREDIT", "STATUS_QUERY  "));
+    assertThat(body)
+        .contains("\"capabilities\":[\"ACCOUNT_DEBIT\",\"ACCOUNT_CREDIT\",\"STATUS_QUERY\"]");
+  }
+
+  @Test
   void aFailureResponseGivesAReadableErrorAndANonZeroExit() throws Exception {
     String url = stubFinSim(409, "{\"code\":\"INSTITUTION_ALREADY_EXISTS\"}");
 

@@ -28,9 +28,16 @@ final class FinSimClient {
     return baseUrl;
   }
 
+  private URI resolveUri(String path) {
+    if (path.startsWith("/")) {
+      return URI.create(baseUrl).resolve(URI.create(path.replace(" ", "%20")));
+    }
+    return URI.create(baseUrl + "/" + path.replace(" ", "%20"));
+  }
+
   Response get(String path) throws IOException, InterruptedException {
     HttpRequest request =
-        HttpRequest.newBuilder(URI.create(baseUrl + path))
+        HttpRequest.newBuilder(resolveUri(path))
             .timeout(Duration.ofSeconds(10))
             .header("Accept", "application/json")
             .GET()
@@ -40,7 +47,7 @@ final class FinSimClient {
 
   Response post(String path, String json) throws IOException, InterruptedException {
     HttpRequest request =
-        HttpRequest.newBuilder(URI.create(baseUrl + path))
+        HttpRequest.newBuilder(resolveUri(path))
             .timeout(Duration.ofSeconds(10))
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")

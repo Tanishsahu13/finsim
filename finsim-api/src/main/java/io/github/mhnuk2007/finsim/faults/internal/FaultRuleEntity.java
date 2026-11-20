@@ -95,8 +95,12 @@ public class FaultRuleEntity {
   }
 
   public void setRemainingCount(Integer remainingCount) {
+    setRemainingCount(remainingCount, Instant.now());
+  }
+
+  public void setRemainingCount(Integer remainingCount, Instant now) {
     this.remainingCount = remainingCount;
-    this.updatedAt = Instant.now();
+    this.updatedAt = now != null ? now : Instant.now();
   }
 
   public Long getSeed() {

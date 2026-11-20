@@ -113,7 +113,7 @@ public class FaultService {
             .findFirst()
             .ifPresent(
                 e -> {
-                  e.setRemainingCount(updated.remainingCount());
+                  e.setRemainingCount(updated.remainingCount(), Instant.now(clock));
                   repository.save(e);
                 });
       }

@@ -35,6 +35,12 @@ class NetworkController {
   @PostMapping("/{networkId}/members")
   Network addMember(
       @PathVariable("networkId") String networkId, @RequestBody AddMemberRequest request) {
-    return registry.addMember(networkId, request.institutionId());
+    if (request == null
+        || request.institutionId() == null
+        || request.institutionId().trim().isEmpty()) {
+      throw new io.github.mhnuk2007.finsim.registry.RegistryExceptions.InvalidInstitution(
+          "institutionId must not be blank.");
+    }
+    return registry.addMember(networkId, request.institutionId().trim());
   }
 }

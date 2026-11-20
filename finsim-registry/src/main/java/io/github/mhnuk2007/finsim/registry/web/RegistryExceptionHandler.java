@@ -4,6 +4,7 @@ import io.github.mhnuk2007.finsim.registry.RegistryException;
 import io.github.mhnuk2007.finsim.registry.RegistryExceptions.CapabilityNotSupported;
 import io.github.mhnuk2007.finsim.registry.RegistryExceptions.InstitutionAlreadyExists;
 import io.github.mhnuk2007.finsim.registry.RegistryExceptions.InstitutionNotFound;
+import io.github.mhnuk2007.finsim.registry.RegistryExceptions.InstitutionSuspended;
 import io.github.mhnuk2007.finsim.registry.RegistryExceptions.InvalidInstitution;
 import io.github.mhnuk2007.finsim.registry.RegistryExceptions.NetworkNotFound;
 import io.github.mhnuk2007.finsim.registry.RegistryExceptions.NotAMember;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /** Every registry failure gets the same error shape: a stable code and a readable message. */
-@RestControllerAdvice(basePackageClasses = RegistryExceptionHandler.class)
+@RestControllerAdvice(basePackageClasses = {InstitutionController.class, NetworkController.class})
 class RegistryExceptionHandler {
 
   @ExceptionHandler(RegistryException.class)
@@ -37,7 +38,9 @@ class RegistryExceptionHandler {
     if (e instanceof InstitutionAlreadyExists) {
       return 409;
     }
-    if (e instanceof NotAMember || e instanceof CapabilityNotSupported) {
+    if (e instanceof NotAMember
+        || e instanceof CapabilityNotSupported
+        || e instanceof InstitutionSuspended) {
       return 422;
     }
     return 500;

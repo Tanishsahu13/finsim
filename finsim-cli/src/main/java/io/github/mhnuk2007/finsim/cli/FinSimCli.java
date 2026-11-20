@@ -140,6 +140,10 @@ public class FinSimCli implements Runnable {
 
     static String body(
         String id, String name, String type, String baseUrl, List<String> capabilities) {
+      List<String> trimmedCapabilities =
+          capabilities == null
+              ? List.of()
+              : capabilities.stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
       return "{\"id\":"
           + Json.quote(id)
           + ",\"name\":"
@@ -149,7 +153,7 @@ public class FinSimCli implements Runnable {
           + ",\"baseUrl\":"
           + Json.quote(baseUrl)
           + ",\"capabilities\":"
-          + Json.array(capabilities)
+          + Json.array(trimmedCapabilities)
           + "}";
     }
 

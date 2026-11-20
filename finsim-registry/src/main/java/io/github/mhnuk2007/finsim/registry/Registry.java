@@ -121,8 +121,10 @@ public class Registry {
       throw new NotAMember(networkId, institutionId);
     }
     Institution institution = institution(institutionId);
-    if (institution.status() != InstitutionStatus.ACTIVE
-        || !institution.capabilities().contains(capability)) {
+    if (institution.status() != InstitutionStatus.ACTIVE) {
+      throw new RegistryExceptions.InstitutionSuspended(institutionId);
+    }
+    if (!institution.capabilities().contains(capability)) {
       throw new CapabilityNotSupported(institutionId, capability);
     }
     return institution;

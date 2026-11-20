@@ -46,4 +46,12 @@ public final class RegistryExceptions {
           "Institution '" + institutionId + "' has not declared capability " + capability + ".");
     }
   }
+
+  public static class InstitutionSuspended extends RegistryException {
+    public InstitutionSuspended(String institutionId) {
+      super(
+          "INSTITUTION_SUSPENDED",
+          "Institution '" + institutionId + "' is suspended and cannot process transactions.");
+    }
+  }
 }

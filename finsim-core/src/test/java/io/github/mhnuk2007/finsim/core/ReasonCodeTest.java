@@ -17,6 +17,7 @@ class ReasonCodeTest {
     assertThat(ReasonCode.AC06.isIso20022()).isTrue();
     assertThat(ReasonCode.AG01.isIso20022()).isTrue();
     assertThat(ReasonCode.AM02.isIso20022()).isTrue();
+    assertThat(ReasonCode.AM03.isIso20022()).isTrue();
     assertThat(ReasonCode.AM04.isIso20022()).isTrue();
     assertThat(ReasonCode.BE04.isIso20022()).isTrue();
     assertThat(ReasonCode.DUPL.isIso20022()).isTrue();
@@ -51,6 +52,7 @@ class ReasonCodeTest {
         "AC06",
         "AG01",
         "AM02",
+        "AM03",
         "AM04",
         "BE04",
         "DUPL",

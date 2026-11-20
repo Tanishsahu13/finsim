@@ -71,7 +71,7 @@ public class InstitutionEntity {
     entity.id = command.id();
     entity.name = command.name().trim();
     entity.type = command.type();
-    entity.baseUrl = command.baseUrl().trim();
+    entity.baseUrl = normalizeBaseUrl(command.baseUrl());
     entity.status = InstitutionStatus.ACTIVE;
     entity.capabilities = new HashSet<>(command.capabilities());
     return entity;
@@ -80,8 +80,19 @@ public class InstitutionEntity {
   public boolean sameDefinitionAs(RegisterInstitution command) {
     return name.equals(command.name().trim())
         && type == command.type()
-        && baseUrl.equals(command.baseUrl().trim())
+        && normalizeBaseUrl(baseUrl).equals(normalizeBaseUrl(command.baseUrl()))
         && capabilities.equals(command.capabilities());
+  }
+
+  private static String normalizeBaseUrl(String url) {
+    if (url == null) {
+      return "";
+    }
+    String trimmed = url.trim();
+    while (trimmed.endsWith("/")) {
+      trimmed = trimmed.substring(0, trimmed.length() - 1);
+    }
+    return trimmed;
   }
 
   public Institution toDomain() {
