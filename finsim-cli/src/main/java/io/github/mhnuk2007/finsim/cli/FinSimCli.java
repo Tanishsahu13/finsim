@@ -110,6 +110,7 @@ public class FinSimCli implements Runnable {
 
   @Command(
       name = "register",
+      mixinStandardHelpOptions = true,
       description = "Register an institution with FinSim (idempotent by id).")
   static class Register extends ApiCommand {
     @Option(names = "--id", required = true, description = "Short id, for example bank-a.")
@@ -160,6 +161,7 @@ public class FinSimCli implements Runnable {
 
   @Command(
       name = "institutions",
+      mixinStandardHelpOptions = true,
       description = "List registered institutions, or show one with --id.")
   static class Institutions extends ApiCommand {
     @Option(names = "--id", description = "Show a single institution.")
@@ -171,7 +173,10 @@ public class FinSimCli implements Runnable {
     }
   }
 
-  @Command(name = "networks", description = "List networks, or show one with --id.")
+  @Command(
+      name = "networks",
+      mixinStandardHelpOptions = true,
+      description = "List networks, or show one with --id.")
   static class Networks extends ApiCommand {
     @Option(names = "--id", description = "Show a single network.")
     String id;
@@ -182,7 +187,10 @@ public class FinSimCli implements Runnable {
     }
   }
 
-  @Command(name = "join", description = "Add a registered institution to a network.")
+  @Command(
+      name = "join",
+      mixinStandardHelpOptions = true,
+      description = "Add a registered institution to a network.")
   static class Join extends ApiCommand {
     @Option(names = "--network", required = true, description = "Network id, for example sandbox.")
     String network;
@@ -199,7 +207,10 @@ public class FinSimCli implements Runnable {
   }
 
   /** Runs the public participant contract checks. */
-  @Command(name = "verify", description = "Check an institution against the finsim/v1 contract.")
+  @Command(
+      name = "verify",
+      mixinStandardHelpOptions = true,
+      description = "Check an institution against the finsim/v1 contract.")
   static class Verify implements Callable<Integer> {
     @Spec CommandSpec spec;
 
@@ -255,15 +266,24 @@ public class FinSimCli implements Runnable {
   }
 
   /** Placeholder: arrives with milestone 1, issue 19. */
-  @Command(name = "transfer", description = "Start a transfer between two institutions.")
+  @Command(
+      name = "transfer",
+      mixinStandardHelpOptions = true,
+      description = "Start a transfer between two institutions.")
   static class Transfer extends NotImplemented {}
 
   /** Placeholder: arrives with milestone 1, issue 19. */
-  @Command(name = "trace", description = "Show every stage, call, and fault for a transfer.")
+  @Command(
+      name = "trace",
+      mixinStandardHelpOptions = true,
+      description = "Show every stage, call, and fault for a transfer.")
   static class Trace extends NotImplemented {}
 
   /** Placeholder: arrives with milestone 1, issue 19. */
-  @Command(name = "fault", description = "Add or remove fault rules.")
+  @Command(
+      name = "fault",
+      mixinStandardHelpOptions = true,
+      description = "Add or remove fault rules.")
   static class Fault extends NotImplemented {}
 
   abstract static class NotImplemented implements Callable<Integer> {
