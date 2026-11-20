@@ -2,7 +2,7 @@
 
 Language-neutral HTTP checks that any institution (bank) must pass. They are written for [Hurl](https://hurl.dev), so they work against a bank written in any language. The Java sample bank in `samples/bank-java` is the reference implementation, and CI runs this suite against it.
 
-This suite is the seed of `finsim verify` (milestone 1). Until that command exists, it is how a contributor knows their bank is correct.
+This suite provides the foundational HTTP test assertions for the participant contract, and powers the native CLI command `finsim verify --url <url>` (implemented in `finsim-cli`, closed #25 in #76). Contributors can run this standalone Hurl suite or use `finsim verify` directly against their bank.
 
 ## Run it
 

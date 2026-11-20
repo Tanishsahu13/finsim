@@ -57,7 +57,7 @@ Reason codes used: `AC01` unknown account, `AC04` closed account, `AM02` invalid
 ./gradlew :sample-bank-java:test
 ```
 
-`BankServiceTest` covers the ledger rules directly. `ContractHttpTest` calls the running bank over HTTP the way FinSim will; those checks are the starting point for `finsim verify` (issue 20).
+`BankServiceTest` covers the ledger rules directly. `ContractHttpTest` calls the running bank over HTTP the way FinSim will; those checks are the starting point for `finsim verify` (issue #25).
 
 ## Limits (on purpose)
 
