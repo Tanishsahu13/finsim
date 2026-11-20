@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.jayway.jsonpath.JsonPath;
+import io.github.mhnuk2007.finsim.faults.FaultService;
 import io.github.mhnuk2007.finsim.transfer.internal.ParticipantClient;
 import io.github.mhnuk2007.finsim.transfer.internal.ParticipantClient.PaymentCallOutcome;
 import java.net.URI;
@@ -20,8 +21,10 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -35,6 +38,12 @@ class TransferWorkflowTests {
   int port;
 
   @MockitoBean ParticipantClient participantClient;
+  @Autowired FaultService faultService;
+
+  @BeforeEach
+  void cleanFaultRules() {
+    faultService.clearAll();
+  }
 
   private final HttpClient http = HttpClient.newHttpClient();
 
