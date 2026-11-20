@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.jayway.jsonpath.JsonPath;
+import io.github.mhnuk2007.finsim.faults.FaultService;
 import io.github.mhnuk2007.finsim.transfer.internal.ParticipantClient;
 import io.github.mhnuk2007.finsim.transfer.internal.ParticipantClient.PaymentCallOutcome;
 import java.net.URI;
@@ -20,8 +21,10 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -35,6 +38,12 @@ class TransferWorkflowTests {
   int port;
 
   @MockitoBean ParticipantClient participantClient;
+  @Autowired FaultService faultService;
+
+  @BeforeEach
+  void cleanFaultRules() {
+    faultService.clearAll();
+  }
 
   private final HttpClient http = HttpClient.newHttpClient();
 
@@ -595,5 +604,41 @@ class TransferWorkflowTests {
             eq("http://localhost:9001"),
             eq(key + ":rev"),
             argThat(req -> txId.equals(req.reversalOf())));
+  }
+
+  @Test
+  @DisplayName(
+      "Issue #82: Outbound source debit timeout marks UNKNOWN with pendingAction NONE (ADR 0001)")
+  void sourceDebitTimeoutSetsPendingActionNone() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "75.00", "REF-DEB-TIMEOUT");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Source bank read timeout"));
+
+    HttpResponse<String> res = postTransfer("sandbox", key, payload);
+    assertThat(res.statusCode()).isEqualTo(201);
+
+    assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("UNKNOWN");
+    assertThat(JsonPath.<String>read(res.body(), "$.pendingAction")).isEqualTo("NONE");
+    assertThat(JsonPath.<String>read(res.body(), "$.currentStage")).isEqualTo("debit_source");
+  }
+
+  @Test
+  @DisplayName(
+      "Issue #83: Participant HTTP 400/409 responses are classified as REJECTED instead of TIMED_OUT")
+  void participantHttp400And409ClassifiedAsRejected() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "120.00", "REF-400-REJ");
+
+    // Participant returns HTTP 400 rejection (e.g. invalid account format)
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.rejected("AC01", "Invalid account format"));
+
+    HttpResponse<String> res = postTransfer("sandbox", key, payload);
+    assertThat(res.statusCode()).isEqualTo(201);
+    assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("REJECTED");
+    assertThat(JsonPath.<String>read(res.body(), "$.reasonCode")).isEqualTo("AC01");
+    assertThat(JsonPath.<String>read(res.body(), "$.emittedBy")).isEqualTo("SOURCE");
   }
 }

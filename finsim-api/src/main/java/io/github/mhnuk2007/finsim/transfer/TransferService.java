@@ -124,7 +124,18 @@ public class TransferService {
           "Transfer '%s' is in state '%s' and cannot be resolved (only UNKNOWN transfers can be resolved)."
               .formatted(transactionId, transfer.getState()));
     }
-    return orchestrator.resolve(transfer);
+    try {
+      return orchestrator.resolve(transfer);
+    } catch (org.springframework.dao.OptimisticLockingFailureException
+        | jakarta.persistence.OptimisticLockException ex) {
+      // In case of a concurrent resolve request racing on the same transfer:
+      // reload the latest state and return if resolved, or throw TransferNotResolvableException
+      Transfer fresh = getTransfer(transactionId);
+      if (fresh.getState() != TransferState.UNKNOWN) {
+        return fresh;
+      }
+      throw ex;
+    }
   }
 
   private static void validateIdempotencyKey(String key) {

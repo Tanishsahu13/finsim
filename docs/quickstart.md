@@ -1,7 +1,7 @@
 # Quickstart
 
 > **Status: runnable platform baseline (milestone 1 in active progress).**
-> The database, FinSim platform API, institution registry, payment transfer orchestration (`POST /api/v1/networks/{networkId}/transfers`), reconciliation resolution (`POST /api/v1/transfers/{id}/resolve`), CLI commands (`institutions`, `networks`, `register`, `join`), and sample banks (Java, Python, Node.js) are **runnable today**. Fault injection (#22), trace recording (#23), chaos testing (#24), and native CLI verification (#25) are in active development.
+> The database, FinSim platform API, institution registry, payment transfer orchestration (`POST /api/v1/networks/{networkId}/transfers`), reconciliation resolution (`POST /api/v1/transfers/{id}/resolve`), CLI commands (`institutions`, `networks`, `register`, `join`, `verify`), fault injection (`POST/GET/DELETE /api/v1/faults`), and sample banks (Java, Python, Node.js) are **runnable today**. Trace recording (#23) and chaos testing (#24) are in active development.
 > Track detailed issue progress in [milestone-1-issues.md](milestone-1-issues.md).
 
 ---

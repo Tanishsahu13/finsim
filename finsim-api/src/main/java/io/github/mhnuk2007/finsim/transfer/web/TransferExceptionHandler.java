@@ -54,4 +54,16 @@ public class TransferExceptionHandler {
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(new ErrorResponse(ex.code(), ex.getMessage()));
   }
+
+  @ExceptionHandler({
+    org.springframework.dao.OptimisticLockingFailureException.class,
+    jakarta.persistence.OptimisticLockException.class
+  })
+  public ResponseEntity<ErrorResponse> handleOptimisticLockingFailure(Exception ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(
+            new ErrorResponse(
+                "IDEMPOTENCY_CONFLICT",
+                "Concurrent state modification on transfer. Please retry the request."));
+  }
 }

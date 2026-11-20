@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 /**
  * First line of SSRF defense for institution base URLs.
@@ -20,8 +19,6 @@ import java.util.regex.Pattern;
  * call (planned; see docs/registry.md).
  */
 public final class BaseUrlValidator {
-
-  private static final Pattern IPV4 = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3}");
 
   private BaseUrlValidator() {}
 
@@ -50,17 +47,27 @@ public final class BaseUrlValidator {
       throw new InvalidInstitution("baseUrl must include a host.");
     }
     host = host.toLowerCase(Locale.ROOT);
+    while (host.endsWith(".")) {
+      host = host.substring(0, host.length() - 1);
+    }
+    if (host.isBlank()) {
+      throw new InvalidInstitution("baseUrl must include a host.");
+    }
     if (host.startsWith("[") && host.endsWith("]")) {
       host = host.substring(1, host.length() - 1);
     }
 
-    if (isIpLiteral(host)) {
-      InetAddress address = parseLiteral(host);
+    ParsedIp parsedIp = parseIpAddress(host);
+    if (parsedIp != null) {
+      InetAddress address = parsedIp.address;
       if (address.isLinkLocalAddress() || address.isAnyLocalAddress()) {
         throw new InvalidInstitution("baseUrl points to a link-local or unspecified address.");
       }
       if (!allowPrivateAddresses && isPrivateOrLoopback(address)) {
         throw new InvalidInstitution("baseUrl points to a private or loopback address.");
+      }
+      if (!parsedIp.canonical) {
+        throw new InvalidInstitution("baseUrl host uses a non-canonical IP format.");
       }
     } else if (!allowPrivateAddresses
         && (host.equals("localhost") || host.endsWith(".localhost"))) {
@@ -68,17 +75,159 @@ public final class BaseUrlValidator {
     }
   }
 
-  private static boolean isIpLiteral(String host) {
-    return host.contains(":") || IPV4.matcher(host).matches();
-  }
+  private static ParsedIp parseIpAddress(String host) {
+    if (host.contains(":")) {
+      try {
+        InetAddress addr = InetAddress.getByName(host);
+        byte[] bytes = addr.getAddress();
+        if (isIpv4Mapped(bytes)) {
+          byte[] ipv4 = new byte[4];
+          System.arraycopy(bytes, 12, ipv4, 0, 4);
+          addr = InetAddress.getByAddress(ipv4);
+        }
+        return new ParsedIp(addr, true);
+      } catch (UnknownHostException | IllegalArgumentException e) {
+        throw new InvalidInstitution("baseUrl host is not a valid IP address.");
+      }
+    }
 
-  private static InetAddress parseLiteral(String host) {
+    String[] parts = host.split("\\.", -1);
+    if (parts.length < 1 || parts.length > 4) {
+      if (parts[parts.length - 1].matches("^[0-9]+$")) {
+        throw new InvalidInstitution("baseUrl host is not a valid host or IP address.");
+      }
+      return null;
+    }
+
+    Long[] vals = new Long[parts.length];
+    boolean allDecimalNoLeadingZeros = true;
+    for (int i = 0; i < parts.length; i++) {
+      Long v = parseNumericPart(parts[i]);
+      if (v == null) {
+        if (parts[parts.length - 1].matches("^[0-9]+$")) {
+          throw new InvalidInstitution("baseUrl host is not a valid host or IP address.");
+        }
+        return null;
+      }
+      vals[i] = v;
+      if (parts[i].startsWith("0x")
+          || parts[i].startsWith("0X")
+          || (parts[i].startsWith("0") && parts[i].length() > 1)) {
+        allDecimalNoLeadingZeros = false;
+      }
+    }
+
+    byte[] bytes;
+    boolean canonical;
+    if (parts.length == 1) {
+      long val = vals[0];
+      if (val < 0 || val > 0xFFFFFFFFL) {
+        throw new InvalidInstitution("baseUrl host is not a valid IP address.");
+      }
+      bytes =
+          new byte[] {
+            (byte) ((val >> 24) & 0xFF),
+            (byte) ((val >> 16) & 0xFF),
+            (byte) ((val >> 8) & 0xFF),
+            (byte) (val & 0xFF)
+          };
+      canonical = false;
+    } else if (parts.length == 2) {
+      long v0 = vals[0];
+      long v1 = vals[1];
+      if (v0 < 0 || v0 > 255 || v1 < 0 || v1 > 0xFFFFFFL) {
+        throw new InvalidInstitution("baseUrl host is not a valid IP address.");
+      }
+      bytes =
+          new byte[] {
+            (byte) v0, (byte) ((v1 >> 16) & 0xFF), (byte) ((v1 >> 8) & 0xFF), (byte) (v1 & 0xFF)
+          };
+      canonical = false;
+    } else if (parts.length == 3) {
+      long v0 = vals[0];
+      long v1 = vals[1];
+      long v2 = vals[2];
+      if (v0 < 0 || v0 > 255 || v1 < 0 || v1 > 255 || v2 < 0 || v2 > 0xFFFFL) {
+        throw new InvalidInstitution("baseUrl host is not a valid IP address.");
+      }
+      bytes = new byte[] {(byte) v0, (byte) v1, (byte) ((v2 >> 8) & 0xFF), (byte) (v2 & 0xFF)};
+      canonical = false;
+    } else {
+      for (long v : vals) {
+        if (v < 0 || v > 255) {
+          throw new InvalidInstitution("baseUrl host is not a valid IP address.");
+        }
+      }
+      bytes =
+          new byte[] {
+            (byte) (long) vals[0],
+            (byte) (long) vals[1],
+            (byte) (long) vals[2],
+            (byte) (long) vals[3]
+          };
+      canonical = allDecimalNoLeadingZeros;
+    }
+
     try {
-      // Safe: the input is an IP literal, so no DNS lookup happens.
-      return InetAddress.getByName(host);
+      InetAddress addr = InetAddress.getByAddress(bytes);
+      return new ParsedIp(addr, canonical);
     } catch (UnknownHostException e) {
       throw new InvalidInstitution("baseUrl host is not a valid IP address.");
     }
+  }
+
+  private static Long parseNumericPart(String s) {
+    if (s.isEmpty()) {
+      return null;
+    }
+    try {
+      if (s.startsWith("0x") || s.startsWith("0X")) {
+        if (s.length() <= 2) {
+          return null;
+        }
+        for (int i = 2; i < s.length(); i++) {
+          char c = s.charAt(i);
+          if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+            return null;
+          }
+        }
+        return Long.parseLong(s.substring(2), 16);
+      }
+      for (int i = 0; i < s.length(); i++) {
+        char c = s.charAt(i);
+        if (c < '0' || c > '9') {
+          return null;
+        }
+      }
+      if (s.startsWith("0") && s.length() > 1) {
+        boolean allOctal = true;
+        for (int i = 1; i < s.length(); i++) {
+          if (s.charAt(i) > '7') {
+            allOctal = false;
+            break;
+          }
+        }
+        if (allOctal) {
+          return Long.parseLong(s, 8);
+        }
+        return Long.parseLong(s, 10);
+      }
+      return Long.parseLong(s, 10);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  private static boolean isIpv4Mapped(byte[] bytes) {
+    if (bytes.length != 16) {
+      return false;
+    }
+    for (int i = 0; i < 10; i++) {
+      if (bytes[i] != 0) {
+        return false;
+      }
+    }
+    return (bytes[10] & 0xFF) == 0xFF && (bytes[11] & 0xFF) == 0xFF;
   }
 
   private static boolean isPrivateOrLoopback(InetAddress address) {
@@ -89,6 +238,16 @@ public final class BaseUrlValidator {
     if (bytes.length == 16) {
       return (bytes[0] & 0xFE) == 0xFC; // IPv6 unique local fc00::/7
     }
-    return bytes[0] == 100 && (bytes[1] & 0xC0) == 64; // carrier-grade NAT 100.64.0.0/10
+    return (bytes[0] & 0xFF) == 100 && (bytes[1] & 0xC0) == 64; // carrier-grade NAT 100.64.0.0/10
+  }
+
+  private static final class ParsedIp {
+    final InetAddress address;
+    final boolean canonical;
+
+    ParsedIp(InetAddress address, boolean canonical) {
+      this.address = address;
+      this.canonical = canonical;
+    }
   }
 }

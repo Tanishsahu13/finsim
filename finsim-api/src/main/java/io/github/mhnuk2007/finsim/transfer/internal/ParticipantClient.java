@@ -105,7 +105,8 @@ public class ParticipantClient {
       // Timeout or connection failure -> UNKNOWN outcome
       return PaymentCallOutcome.timedOut(ex.getMessage());
     } catch (RestClientResponseException ex) {
-      if (ex.getStatusCode().value() == 422) {
+      int statusCode = ex.getStatusCode().value();
+      if (statusCode == 422 || statusCode == 400 || statusCode == 409) {
         try {
           ParticipantErrorPayload error = ex.getResponseBodyAs(ParticipantErrorPayload.class);
           String code = error != null && error.code() != null ? error.code() : "REJECTED";

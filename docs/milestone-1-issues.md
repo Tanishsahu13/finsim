@@ -62,11 +62,11 @@ Orchestrate `DEBIT` at source institution, then `CREDIT` at destination institut
 
 **12. Timeout handling and `UNKNOWN`** `[milestone-1]` `[done]`
 A timed-out outbound call moves the transfer to `UNKNOWN` (never `REJECTED`). Retrying the transfer while `UNKNOWN` returns `409 RECONCILIATION_REQUIRED`.
-*Status:* Completed. Verified state transition to `UNKNOWN`, pendingAction population, and retry blocking with HTTP 409.
+*Status:* Completed. Verified state transition to `UNKNOWN`, pendingAction population (aligned with ADR 0001 in [#91](https://github.com/mhnuk2007/finsim/pull/91) to set `NONE` on initial debit timeout, closing [#82](https://github.com/mhnuk2007/finsim/issues/82)), participant 400/409 classification (closed [#83](https://github.com/mhnuk2007/finsim/issues/83)), and retry blocking with HTTP 409.
 
 **13. Resolve endpoint** `[milestone-1]` `[done]`
 `POST /api/v1/transfers/{id}/resolve` queries each leg via `GET /finsim/v1/payments/{id}` and applies the decision table in [ADR 0001](adr/0001-resolving-unknown-transfers.md): re-send a lost credit with the same idempotency key, reverse the debit only after a definitive rejection, never guess.
-*Status:* Completed. Implemented in `TransferOrchestrator.resolve` and `TransferController`, covering all decision table rows with dedicated scenario tests.
+*Status:* Completed. Implemented in `TransferOrchestrator.resolve` and `TransferController`, covering all decision table rows with dedicated scenario tests. Hardened against concurrent resolve race conditions and optimistic lock failure in [#91](https://github.com/mhnuk2007/finsim/pull/91) (closing [#84](https://github.com/mhnuk2007/finsim/issues/84)).
 
 **14. Reason codes** `[milestone-1]` `[done]` `[gfi]`
 Standardized reason code registry (ISO 20022 codes like `AC01`, `AC04`, `AM02`, `AM04`, `DUPL`, `MS03`, plus FinSim platform codes). Every rejection must carry a reason code and emitter (`SOURCE`, `DESTINATION`, `FINSIM`).
@@ -81,10 +81,9 @@ Random sequences of duplicate requests, timeouts, and retries never change balan
 
 ## Simulation
 
-**16. Fault rules (DELAY, TIMEOUT, DUPLICATE_DELIVERY)** `[milestone-1]`
+**16. Fault rules (DELAY, TIMEOUT, DUPLICATE_DELIVERY)** `[milestone-1]` `[done]`
 Implement `/api/v1/faults` and apply rules on outbound calls, with optional probability, count cap, and seed.
-*Done when:* the same seed produces the same fault sequence.
-*Issue:* [#22](https://github.com/mhnuk2007/finsim/issues/22)
+*Status:* Completed in [#89](https://github.com/mhnuk2007/finsim/pull/89) (closed [#22](https://github.com/mhnuk2007/finsim/issues/22)). Deterministic rule engine in `finsim-sim`, REST endpoints in `finsim-api`, Flyway migration `V4__add_fault_rule_seed.sql`, and participant outbound HTTP interception in `TransferOrchestrator`.
 
 **17. Trace recording and endpoint** `[milestone-1]`
 Record stages, outbound calls (request, response, duration), injected faults, and state changes; expose `GET /api/v1/transfers/{id}/trace`.
@@ -116,10 +115,9 @@ Same behavior in Node/TypeScript, in a separate directory, no shared code.
 Commands that wrap the network API with human-readable output and `--json` raw machine-readable flag support.
 *Status:* Registry commands (`register`, `institutions`, `networks`, `join`) completed with client and `--json` / `-j` flag handling (closed [#17](https://github.com/mhnuk2007/finsim/issues/17) in [#35](https://github.com/mhnuk2007/finsim/pull/35)). Transfer, trace, and fault subcommands pending payment workflow API.
 
-**23. CLI: `finsim verify --url`** `[milestone-1]` `[in-progress]`
+**23. CLI: `finsim verify --url`** `[milestone-1]` `[done]`
 Check health, capabilities, debit and credit, idempotent replay, idempotency conflict, status query, and error shape. Actionable messages: which check failed, why, how to fix.
-*Status:* Conformance test engine implementation in progress by @maestro-00 in [#76](https://github.com/mhnuk2007/finsim/pull/76).
-*Issue:* [#25](https://github.com/mhnuk2007/finsim/issues/25)
+*Status:* Completed by @maestro-00 in [#76](https://github.com/mhnuk2007/finsim/pull/76) (closed [#25](https://github.com/mhnuk2007/finsim/issues/25)). Implemented 7-phase participant conformance test engine with WireMock test suite, `--verbose`, and `--json` support.
 
 **24. Local verification and pre-commit hooks** `[milestone-1]` `[done]`
 Cross-platform developer verification scripts (`scripts/verify.sh`, `scripts/verify.ps1`) and optional Spotless pre-commit hook (`.githooks/pre-commit`).

@@ -7,16 +7,20 @@ import io.github.mhnuk2007.finsim.core.PendingAction;
 import io.github.mhnuk2007.finsim.core.ReasonCode;
 import io.github.mhnuk2007.finsim.core.StageEntry;
 import io.github.mhnuk2007.finsim.core.Transfer;
+import io.github.mhnuk2007.finsim.faults.FaultService;
 import io.github.mhnuk2007.finsim.registry.Capability;
 import io.github.mhnuk2007.finsim.registry.Institution;
 import io.github.mhnuk2007.finsim.registry.Network;
 import io.github.mhnuk2007.finsim.registry.Registry;
 import io.github.mhnuk2007.finsim.registry.RegistryException;
+import io.github.mhnuk2007.finsim.sim.FaultDecision;
+import io.github.mhnuk2007.finsim.sim.FaultType;
 import io.github.mhnuk2007.finsim.transfer.TransferDtos.CreateTransferRequest;
 import io.github.mhnuk2007.finsim.transfer.internal.ParticipantClient.LegRequestPayload;
 import io.github.mhnuk2007.finsim.transfer.internal.ParticipantClient.MoneyPayload;
 import io.github.mhnuk2007.finsim.transfer.internal.ParticipantClient.PaymentCallOutcome;
 import java.time.Clock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +31,24 @@ public class TransferOrchestrator {
   private final ParticipantClient participantClient;
   private final TransferRepository transferRepository;
   private final TransferStageRepository stageRepository;
+  private final FaultService faultService;
   private final Clock clock;
+
+  @Autowired
+  public TransferOrchestrator(
+      Registry registry,
+      ParticipantClient participantClient,
+      TransferRepository transferRepository,
+      TransferStageRepository stageRepository,
+      FaultService faultService,
+      Clock clock) {
+    this.registry = registry;
+    this.participantClient = participantClient;
+    this.transferRepository = transferRepository;
+    this.stageRepository = stageRepository;
+    this.faultService = faultService;
+    this.clock = clock;
+  }
 
   public TransferOrchestrator(
       Registry registry,
@@ -35,11 +56,7 @@ public class TransferOrchestrator {
       TransferRepository transferRepository,
       TransferStageRepository stageRepository,
       Clock clock) {
-    this.registry = registry;
-    this.participantClient = participantClient;
-    this.transferRepository = transferRepository;
-    this.stageRepository = stageRepository;
-    this.clock = clock;
+    this(registry, participantClient, transferRepository, stageRepository, null, clock);
   }
 
   public Transfer orchestrate(
@@ -117,7 +134,7 @@ public class TransferOrchestrator {
             "SYNTHETIC");
 
     PaymentCallOutcome debitOutcome =
-        participantClient.applyLeg(fromInst.baseUrl(), debitKey, debitPayload);
+        sendLeg(fromInst.id(), fromInst.baseUrl(), debitKey, debitPayload);
 
     switch (debitOutcome.status()) {
       case REJECTED -> {
@@ -133,7 +150,7 @@ public class TransferOrchestrator {
       case TIMED_OUT -> {
         transfer.markUnknown(
             "debit_source",
-            PendingAction.REVERSE_DEBIT,
+            PendingAction.NONE,
             false,
             debitOutcome.errorMessage(),
             clock.instant());
@@ -158,7 +175,7 @@ public class TransferOrchestrator {
             "SYNTHETIC");
 
     PaymentCallOutcome creditOutcome =
-        participantClient.applyLeg(toInst.baseUrl(), creditKey, creditPayload);
+        sendLeg(toInst.id(), toInst.baseUrl(), creditKey, creditPayload);
 
     switch (creditOutcome.status()) {
       case COMPLETED -> transfer.complete("credit_destination", clock.instant());
@@ -373,8 +390,7 @@ public class TransferOrchestrator {
             transfer.getId(),
             "SYNTHETIC");
 
-    PaymentCallOutcome revOutcome =
-        participantClient.applyLeg(fromInst.baseUrl(), revKey, revPayload);
+    PaymentCallOutcome revOutcome = sendLeg(fromInst.id(), fromInst.baseUrl(), revKey, revPayload);
 
     switch (revOutcome.status()) {
       case COMPLETED -> {
@@ -414,6 +430,33 @@ public class TransferOrchestrator {
       }
     }
     return transfer;
+  }
+
+  private PaymentCallOutcome sendLeg(
+      String targetInstitutionId,
+      String baseUrl,
+      String idempotencyKey,
+      LegRequestPayload payload) {
+    if (faultService != null) {
+      FaultDecision decision = faultService.evaluateOutboundCall(targetInstitutionId);
+      if (decision.triggered()) {
+        if (decision.faultType() == FaultType.TIMEOUT) {
+          return PaymentCallOutcome.timedOut(
+              "Simulated timeout via fault injection on target " + targetInstitutionId);
+        } else if (decision.faultType() == FaultType.DELAY) {
+          if (decision.delayMs() > 0) {
+            try {
+              Thread.sleep(decision.delayMs());
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+          }
+        } else if (decision.faultType() == FaultType.DUPLICATE_DELIVERY) {
+          participantClient.applyLeg(baseUrl, idempotencyKey, payload);
+        }
+      }
+    }
+    return participantClient.applyLeg(baseUrl, idempotencyKey, payload);
   }
 
   private Transfer createAndReject(
