@@ -10,7 +10,8 @@ FinSim uses **PostgreSQL 17** exclusively across all environments. There is no H
 - **Multi-Module Migration Structure**: Flyway migrations are partitioned by the module owning the underlying domain:
   - `finsim-api/src/main/resources/db/migration/V1__baseline.sql`: platform foundation tables (`transfers`, `transfer_stages`, `fault_rules`, legacy baseline).
   - `finsim-registry/src/main/resources/db/migration/V2__registry.sql`: registry tables (`registry_institutions`, `registry_networks`, and relationships).
-  - Version numbering is globally sequential (`V1`, `V2`, ...) across all modules.
+  - `finsim-api/src/main/resources/db/migration/V3__widen_transfer_amount_scale.sql`: widens `transfers.amount` from `NUMERIC(18, 4)` to `NUMERIC(22, 8)` to align with the 8-decimal Money domain model and high-precision/crypto amounts (closed #46 in #66).
+  - Version numbering is globally sequential (`V1`, `V2`, `V3`, ...) across all modules.
 - **Common Audit and Concurrency Columns**: Every persistent entity table maintains:
   - `created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP`
   - `updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP`
@@ -23,7 +24,7 @@ FinSim uses **PostgreSQL 17** exclusively across all environments. There is no H
 
 ## 2. Table Definitions
 
-### Platform Foundation (`V1__baseline.sql`)
+### Platform Foundation (`V1__baseline.sql`, `V3__widen_transfer_amount_scale.sql`)
 
 #### `transfers`
 The central aggregate root for payment transfers.
@@ -39,7 +40,7 @@ The central aggregate root for payment transfers.
 | `from_account` | `VARCHAR(64)` | `NOT NULL` | Debited account reference (`ACC-1`) |
 | `to_institution` | `VARCHAR(64)` | `NOT NULL` | Credited institution slug (`bank-b`) |
 | `to_account` | `VARCHAR(64)` | `NOT NULL` | Credited account reference (`ACC-2`) |
-| `amount` | `NUMERIC(18, 4)` | `NOT NULL` | Precise monetary amount |
+| `amount` | `NUMERIC(22, 8)` | `NOT NULL` | Precise monetary amount (supports up to 8 decimal places) |
 | `currency` | `VARCHAR(3)` | `NOT NULL` | ISO 4217 three-letter currency code (e.g. `USD`) |
 | `reference` | `VARCHAR(140)` | Nullable | Client or payment reference |
 | `reason_code` | `VARCHAR(32)` | Nullable | Rejection reason code (e.g. `AM04`, `AC01`, `DUPL`) |

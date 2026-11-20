@@ -1,7 +1,7 @@
 # Quickstart
 
 > **Status: runnable platform baseline (milestone 1 in active progress).**
-> The database, FinSim platform API, institution registry, payment transfer orchestration (`POST /api/v1/networks/{networkId}/transfers`), reconciliation resolution (`POST /api/v1/transfers/{id}/resolve`), CLI commands (`institutions`, `networks`, `register`, `join`), and Java sample banks (`bank-a`, `bank-b`) are **runnable today**. Fault injection (#22), trace recording (#23), chaos testing (#24), and native CLI verification (#25) are in active development.
+> The database, FinSim platform API, institution registry, payment transfer orchestration (`POST /api/v1/networks/{networkId}/transfers`), reconciliation resolution (`POST /api/v1/transfers/{id}/resolve`), CLI commands (`institutions`, `networks`, `register`, `join`), and sample banks (Java, Python, Node.js) are **runnable today**. Fault injection (#22), trace recording (#23), chaos testing (#24), and native CLI verification (#25) are in active development.
 > Track detailed issue progress in [milestone-1-issues.md](milestone-1-issues.md).
 
 ---
@@ -9,7 +9,9 @@
 ## Prerequisites
 
 - **Docker and Docker Compose** (for PostgreSQL)
-- **Java 21+** (for building FinSim and the sample bank from source)
+- **Java 21+** (for building FinSim and Java sample bank from source)
+- **Node.js 20+** (optional, for running the Node sample bank)
+- **Python 3.10+** (optional, for running the Python sample bank)
 - **Git**
 
 ---
@@ -42,13 +44,13 @@ curl http://localhost:8080/actuator/health
 # {"status":"UP"}
 ```
 
-On startup, Flyway automatically runs database migrations (`V1__baseline.sql`, `V2__registry.sql`), creates the `sandbox` network (USD), and seeds member institutions `bank-a` (`http://localhost:9001`) and `bank-b` (`http://localhost:9002`).
+On startup, Flyway automatically runs database migrations (`V1__baseline.sql`, `V2__registry.sql`, `V3__widen_transfer_amount_scale.sql`), creates the `sandbox` network (USD), and seeds member institutions `bank-a` (`http://localhost:9001`) and `bank-b` (`http://localhost:9002`).
 
 ---
 
 ## 2. Start the Sample Banks
 
-FinSim includes independent in-memory sample banks implementing the `finsim/v1` participant contract in Java (`samples/bank-java`) and Python (`samples/bank-python`).
+FinSim includes independent in-memory sample banks implementing the `finsim/v1` participant contract in Java (`samples/bank-java`), Python (`samples/bank-python`), and Node.js/TypeScript (`samples/bank-node`).
 
 ### Option A: Java Sample Banks (Bank A & Bank B)
 
@@ -76,6 +78,16 @@ pip install -r requirements.txt
 python app.py              # starts on port 9003
 ```
 
+### Option C: Node.js / TypeScript Sample Bank
+
+FinSim also provides a standalone Node.js / TypeScript participant bank on port 9012:
+
+```bash
+cd samples/bank-node
+npm ci
+npm start                  # starts on port 9012 (or PORT=9010 npm start)
+```
+
 ### Verify Participant Endpoints
 
 Verify their participant contract endpoints:
@@ -85,10 +97,12 @@ Verify their participant contract endpoints:
 curl http://localhost:9001/finsim/v1/institution/health
 curl http://localhost:9002/finsim/v1/institution/health
 curl http://localhost:9003/finsim/v1/institution/health
+curl http://localhost:9012/finsim/v1/institution/health
 
 # Capabilities
 curl http://localhost:9001/finsim/v1/institution/capabilities
 curl http://localhost:9003/finsim/v1/institution/capabilities
+curl http://localhost:9012/finsim/v1/institution/capabilities
 
 # Inspect initial synthetic balances (Java banks expose /sample/accounts)
 curl http://localhost:9001/sample/accounts

@@ -37,7 +37,7 @@ Timeouts, duplicate requests, and uncertain outcomes are the hardest parts of pa
 | Sample bank (Python): in-memory bank implementing participant contract | Done (`samples/bank-python`) |
 | Sample bank (Node.js/TypeScript): in-memory bank implementing participant contract | Done (`samples/bank-node`) |
 | Payment orchestration & ADR 0001 resolution: debit/credit orchestration, `UNKNOWN` state handling, resolve endpoint | Done |
-| Milestone 1: two sample banks, `finsim/v1` minimal contract, payment state machine with `UNKNOWN`, fault injection, `finsim trace`, `finsim verify` | In progress |
+| Milestone 1: three sample banks (Java, Python, Node.js), `finsim/v1` minimal contract, payment state machine with `UNKNOWN`, fault injection, `finsim trace`, `finsim verify` | In progress |
 | Milestone 2: card authorize/capture/refund, virtual clock, ledger | Planned |
 | Milestone 3: disputes, reconciliation, scenario replay | Planned |
 | Clearing, RTGS, FX, screening, ISO 20022, billers, fees | Roadmap (help wanted) |
@@ -48,7 +48,7 @@ See [docs/quickstart.md](docs/quickstart.md) for the full step-by-step walkthrou
 
 ### Try the running platform today
 
-You can run PostgreSQL, the FinSim API, the Java/Python sample banks, and the CLI right now:
+You can run PostgreSQL, the FinSim API, the Java/Python/Node sample banks, and the CLI right now:
 
 ```bash
 # 1. Start PostgreSQL 17
@@ -61,7 +61,7 @@ docker compose -f deploy/docker-compose.yml up -d
 ./gradlew :sample-bank-java:bootRun
 ./gradlew :sample-bank-java:bootRun --args="--spring.profiles.active=bank-b"
 
-# (Optional: or run the Python sample bank on port 9003 in samples/bank-python)
+# (Optional: run the Python bank on port 9003 in samples/bank-python, or Node bank on port 9012 in samples/bank-node)
 
 # 4. Query seeded institutions and the sandbox network using the CLI (supports --json / -j)
 ./gradlew :finsim-cli:run --args="institutions"

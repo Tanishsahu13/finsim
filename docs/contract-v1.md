@@ -45,7 +45,7 @@ FinSim never reads or writes your database. It only knows what your institution 
 3. **Money is a decimal string plus a currency** (`"100.00"`, `"USD"`), never a floating-point number.
 4. **Participants report only what they know.** A leg status is `ACCEPTED`, `COMPLETED`, or `REJECTED`. A participant never reports `UNKNOWN`.
 5. **`UNKNOWN` belongs to FinSim.** When a call to a participant times out, FinSim marks the transfer `UNKNOWN` (never `REJECTED`). It then blocks retries (`409 RECONCILIATION_REQUIRED`) until `resolve` has asked each institution what actually happened.
-6. **Every rejection carries a reason code** and says which side emitted it (`FINSIM`, `SOURCE`, or `DESTINATION`).
+6. **Rejection reason codes vs. API error codes.** A transfer rejected during orchestration is not an HTTP error: it is returned as a `Transfer` with `state: REJECTED` and a domain `reasonCode` (using ISO 20022 reason codes like `AC04`, `AM04`, `DUPL`, or FinSim platform codes like `FINSIM_TIMEOUT`), with `emittedBy` specifying `FINSIM`, `SOURCE`, or `DESTINATION`. Conversely, HTTP 4xx/5xx responses return the `Error` schema with machine-readable API error codes (`BAD_REQUEST`, `IDEMPOTENCY_CONFLICT`, `RECONCILIATION_REQUIRED`, `NOT_FOUND`).
 7. **Everything is `SYNTHETIC`.** Requests and responses carry `"provenance": "SYNTHETIC"`.
 
 ## Transfer states

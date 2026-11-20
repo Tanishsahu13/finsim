@@ -18,7 +18,7 @@ Add Spring Modulith and ArchUnit checks so modules cannot touch each other's int
 
 **3. Database baseline** `[milestone-1]` `[done]`
 PostgreSQL 17 + Flyway; base migration with common columns (`id`, `created_at`, `updated_at`, `version`); Testcontainers for automated tests, Docker Compose for local development. Strict PostgreSQL parity (no H2 fallback).
-*Status:* Completed. Flyway `V1__baseline.sql` and `V2__registry.sql` verified with Testcontainers and Compose.
+*Status:* Completed. Flyway `V1__baseline.sql`, `V2__registry.sql`, and `V3__widen_transfer_amount_scale.sql` (NUMERIC(22, 8) precision, closed [#46](https://github.com/mhnuk2007/finsim/issues/46) in [#66](https://github.com/mhnuk2007/finsim/pull/66)) verified with Testcontainers and Compose.
 
 **4. Publish the contract** `[milestone-1]` `[done]`
 Add `contract/finsim-v1.openapi.yaml`, validate it in CI, generate server stubs or models from it.
@@ -70,7 +70,7 @@ A timed-out outbound call moves the transfer to `UNKNOWN` (never `REJECTED`). Re
 
 **14. Reason codes** `[milestone-1]` `[done]` `[gfi]`
 Standardized reason code registry (ISO 20022 codes like `AC01`, `AC04`, `AM02`, `AM04`, `DUPL`, `MS03`, plus FinSim platform codes). Every rejection must carry a reason code and emitter (`SOURCE`, `DESTINATION`, `FINSIM`).
-*Status:* Completed. Enums, ISO code validation, and end-to-end propagation from participant responses verified.
+*Status:* Completed. Enums, ISO code validation, and end-to-end propagation from participant responses verified. Domain rejection reason codes explicitly separated from API error codes in OpenAPI contract and documentation (closed [#59](https://github.com/mhnuk2007/finsim/issues/59) in [#72](https://github.com/mhnuk2007/finsim/pull/72)).
 
 **15. Property-based test: no duplicate effects** `[milestone-1]`
 Random sequences of duplicate requests, timeouts, and retries never change balances more than once per transfer.
@@ -116,9 +116,9 @@ Same behavior in Node/TypeScript, in a separate directory, no shared code.
 Commands that wrap the network API with human-readable output and `--json` raw machine-readable flag support.
 *Status:* Registry commands (`register`, `institutions`, `networks`, `join`) completed with client and `--json` / `-j` flag handling (closed [#17](https://github.com/mhnuk2007/finsim/issues/17) in [#35](https://github.com/mhnuk2007/finsim/pull/35)). Transfer, trace, and fault subcommands pending payment workflow API.
 
-**23. CLI: `finsim verify --url`** `[milestone-1]`
+**23. CLI: `finsim verify --url`** `[milestone-1]` `[in-progress]`
 Check health, capabilities, debit and credit, idempotent replay, idempotency conflict, status query, and error shape. Actionable messages: which check failed, why, how to fix.
-*Done when:* both sample banks pass; a deliberately broken bank fails with clear messages.
+*Status:* Conformance test engine implementation in progress by @maestro-00 in [#76](https://github.com/mhnuk2007/finsim/pull/76).
 *Issue:* [#25](https://github.com/mhnuk2007/finsim/issues/25)
 
 **24. Local verification and pre-commit hooks** `[milestone-1]` `[done]`
