@@ -19,11 +19,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TransferService {
+
+  private static final Pattern CURRENCY_PATTERN = Pattern.compile("^[A-Z]{3}$");
 
   public record TransferExecutionResult(Transfer transfer, boolean isReplay) {}
 
@@ -154,28 +157,44 @@ public class TransferService {
     }
     if (req.from() == null
         || req.from().institutionId() == null
-        || req.from().accountReference() == null) {
+        || req.from().institutionId().isBlank()
+        || req.from().accountReference() == null
+        || req.from().accountReference().isBlank()) {
       throw new InvalidTransferRequestException(
-          "'from' institutionId and accountReference are required.");
+          "'from' institutionId and accountReference are required and must not be blank.");
     }
     if (req.to() == null
         || req.to().institutionId() == null
-        || req.to().accountReference() == null) {
+        || req.to().institutionId().isBlank()
+        || req.to().accountReference() == null
+        || req.to().accountReference().isBlank()) {
       throw new InvalidTransferRequestException(
-          "'to' institutionId and accountReference are required.");
+          "'to' institutionId and accountReference are required and must not be blank.");
     }
     if (req.from().institutionId().equals(req.to().institutionId())
         && req.from().accountReference().equals(req.to().accountReference())) {
       throw new InvalidTransferRequestException(
           "Source and destination accounts must not be identical.");
     }
-    if (req.money() == null || req.money().amount() == null || req.money().currency() == null) {
+    if (req.money() == null
+        || req.money().amount() == null
+        || req.money().amount().isBlank()
+        || req.money().currency() == null
+        || req.money().currency().isBlank()) {
       throw new InvalidTransferRequestException("'money' amount and currency are required.");
+    }
+    if (!CURRENCY_PATTERN.matcher(req.money().currency()).matches()) {
+      throw new InvalidTransferRequestException(
+          "currency must be three uppercase letters: " + req.money().currency());
     }
     try {
       BigDecimal amt = new BigDecimal(req.money().amount());
       if (amt.signum() <= 0) {
         throw new InvalidTransferRequestException("Transfer amount must be strictly positive.");
+      }
+      if (amt.scale() > 8) {
+        throw new InvalidTransferRequestException(
+            "amount has more than 8 decimal places: " + req.money().amount());
       }
     } catch (NumberFormatException ex) {
       throw new InvalidTransferRequestException("Invalid decimal amount: " + req.money().amount());

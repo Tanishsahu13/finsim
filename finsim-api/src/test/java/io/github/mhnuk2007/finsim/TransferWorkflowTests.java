@@ -641,4 +641,77 @@ class TransferWorkflowTests {
     assertThat(JsonPath.<String>read(res.body(), "$.reasonCode")).isEqualTo("AC01");
     assertThat(JsonPath.<String>read(res.body(), "$.emittedBy")).isEqualTo("SOURCE");
   }
+
+  @Test
+  @DisplayName(
+      "Issue #80: Blank institutionId or accountReference returns HTTP 400 INVALID_REQUEST")
+  void blankFieldsInTransferRequestReturnBadRequest() throws Exception {
+    String key = randomKey();
+    // Blank institutionId
+    String payload1 = transferJson("", "ACC-1", "bank-b", "ACC-2", "10.00", "REF-BLANK-INST");
+    HttpResponse<String> res1 = postTransfer("sandbox", key, payload1);
+    assertThat(res1.statusCode()).isEqualTo(400);
+    assertThat(JsonPath.<String>read(res1.body(), "$.code")).isEqualTo("INVALID_REQUEST");
+
+    // Blank accountReference
+    String payload2 = transferJson("bank-a", "   ", "bank-b", "ACC-2", "10.00", "REF-BLANK-ACC");
+    HttpResponse<String> res2 = postTransfer("sandbox", key, payload2);
+    assertThat(res2.statusCode()).isEqualTo(400);
+    assertThat(JsonPath.<String>read(res2.body(), "$.code")).isEqualTo("INVALID_REQUEST");
+  }
+
+  @Test
+  @DisplayName("Issue #81: Invalid currency casing and scale > 8 return HTTP 400 INVALID_REQUEST")
+  void invalidCurrencyCasingAndScaleReturnBadRequest() throws Exception {
+    String key = randomKey();
+    // Lowercase currency
+    String payload1 =
+        """
+        {
+          "from": { "institutionId": "bank-a", "accountReference": "ACC-1" },
+          "to": { "institutionId": "bank-b", "accountReference": "ACC-2" },
+          "money": { "amount": "10.00", "currency": "usd" },
+          "reference": "REF-CURR-LOWER"
+        }
+        """;
+    HttpResponse<String> res1 = postTransfer("sandbox", key, payload1);
+    assertThat(res1.statusCode()).isEqualTo(400);
+    assertThat(JsonPath.<String>read(res1.body(), "$.code")).isEqualTo("INVALID_REQUEST");
+
+    // Amount scale > 8
+    String payload2 =
+        """
+        {
+          "from": { "institutionId": "bank-a", "accountReference": "ACC-1" },
+          "to": { "institutionId": "bank-b", "accountReference": "ACC-2" },
+          "money": { "amount": "10.123456789", "currency": "USD" },
+          "reference": "REF-EXCESS-SCALE"
+        }
+        """;
+    HttpResponse<String> res2 = postTransfer("sandbox", key, payload2);
+    assertThat(res2.statusCode()).isEqualTo(400);
+    assertThat(JsonPath.<String>read(res2.body(), "$.code")).isEqualTo("INVALID_REQUEST");
+  }
+
+  @Test
+  @DisplayName("Issue #67: Non-existent network returns HTTP 404 NETWORK_NOT_FOUND")
+  void nonExistentNetworkReturnsNotFound() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "50.00", "REF-NO-NET");
+
+    HttpResponse<String> res = postTransfer("nonexistent-network", key, payload);
+    assertThat(res.statusCode()).isEqualTo(404);
+    assertThat(JsonPath.<String>read(res.body(), "$.code")).isEqualTo("NETWORK_NOT_FOUND");
+  }
+
+  @Test
+  @DisplayName("Issue #64: Malformed JSON payload returns HTTP 400 INVALID_REQUEST")
+  void malformedJsonReturnsBadRequest() throws Exception {
+    String key = randomKey();
+    String malformedJson = "{ invalid: json }";
+
+    HttpResponse<String> res = postTransfer("sandbox", key, malformedJson);
+    assertThat(res.statusCode()).isEqualTo(400);
+    assertThat(JsonPath.<String>read(res.body(), "$.code")).isEqualTo("INVALID_REQUEST");
+  }
 }

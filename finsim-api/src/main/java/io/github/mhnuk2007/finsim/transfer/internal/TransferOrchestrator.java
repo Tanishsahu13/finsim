@@ -13,6 +13,7 @@ import io.github.mhnuk2007.finsim.registry.Institution;
 import io.github.mhnuk2007.finsim.registry.Network;
 import io.github.mhnuk2007.finsim.registry.Registry;
 import io.github.mhnuk2007.finsim.registry.RegistryException;
+import io.github.mhnuk2007.finsim.registry.RegistryExceptions;
 import io.github.mhnuk2007.finsim.sim.FaultDecision;
 import io.github.mhnuk2007.finsim.sim.FaultType;
 import io.github.mhnuk2007.finsim.transfer.TransferDtos.CreateTransferRequest;
@@ -91,6 +92,20 @@ public class TransferOrchestrator {
             Emitter.FINSIM,
             "Currency " + money.currency() + " not supported on network " + networkId);
       }
+    } catch (RegistryExceptions.NetworkNotFound ex) {
+      throw ex;
+    } catch (RegistryExceptions.CapabilityNotSupported ex) {
+      return createAndReject(
+          transactionId,
+          networkId,
+          idempotencyKey,
+          from,
+          to,
+          money,
+          request.reference(),
+          ReasonCode.CAPABILITY_NOT_SUPPORTED.code(),
+          Emitter.FINSIM,
+          ex.getMessage());
     } catch (RegistryException ex) {
       return createAndReject(
           transactionId,

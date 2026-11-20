@@ -55,6 +55,27 @@ public class TransferExceptionHandler {
         .body(new ErrorResponse(ex.code(), ex.getMessage()));
   }
 
+  @ExceptionHandler(io.github.mhnuk2007.finsim.registry.RegistryExceptions.NetworkNotFound.class)
+  public ResponseEntity<ErrorResponse> handleNetworkNotFound(
+      io.github.mhnuk2007.finsim.registry.RegistryExceptions.NetworkNotFound ex) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(new ErrorResponse(ex.code(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ErrorResponse("INVALID_REQUEST", ex.getMessage()));
+  }
+
+  @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+  public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+      org.springframework.http.converter.HttpMessageNotReadableException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(
+            new ErrorResponse("INVALID_REQUEST", "Malformed or unreadable JSON request payload."));
+  }
+
   @ExceptionHandler({
     org.springframework.dao.OptimisticLockingFailureException.class,
     jakarta.persistence.OptimisticLockException.class

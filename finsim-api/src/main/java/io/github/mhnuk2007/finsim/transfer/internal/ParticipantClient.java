@@ -2,7 +2,6 @@ package io.github.mhnuk2007.finsim.transfer.internal;
 
 import java.time.Duration;
 import java.util.Optional;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -24,6 +23,10 @@ public class ParticipantClient {
     factory.setConnectTimeout(connectTimeout);
     factory.setReadTimeout(readTimeout);
     this.restClient = RestClient.builder().requestFactory(factory).build();
+  }
+
+  ParticipantClient(RestClient restClient) {
+    this.restClient = restClient;
   }
 
   public enum CallStatus {
@@ -89,11 +92,6 @@ public class ParticipantClient {
               .contentType(MediaType.APPLICATION_JSON)
               .body(request)
               .retrieve()
-              .onStatus(
-                  HttpStatusCode::is4xxClientError,
-                  (req, resp) -> {
-                    // Let RestClientResponseException handle 4xx
-                  })
               .body(LegResponsePayload.class);
 
       if (response != null && "COMPLETED".equalsIgnoreCase(response.status())) {
