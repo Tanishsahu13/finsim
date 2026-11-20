@@ -83,8 +83,8 @@ This check looks only at literal addresses and syntax to preserve offline determ
 
 ## Routing check
 
-`Registry.requireRoutable(networkId, institutionId, capability)` is what the transfer workflow will call before sending a leg. It fails with `NOT_A_MEMBER` or `CAPABILITY_NOT_SUPPORTED`, which covers the registry side of issue 7. Mapping those to a rejected transfer happens when the workflow is built.
+`Registry.requireRoutable(networkId, institutionId, capability)` is invoked by `TransferOrchestrator` before sending an outbound payment leg. If routing validation fails, it raises `NOT_A_MEMBER` or `CAPABILITY_NOT_SUPPORTED`, which `TransferOrchestrator` records as a rejected transfer stage with domain reason code `CAPABILITY_NOT_SUPPORTED` or `ROUTING_ERROR`.
 
 ## Not built yet
 
-Integration verification before an institution becomes active (`finsim verify`), suspending institutions, removing members, per-institution credentials, and configurable schemes.
+Dynamic participant directory discovery endpoint (`GET /api/v1/networks/{networkId}/directory`, issue #31), suspending institutions (issue #78), removing members, per-institution credentials, and configurable schemes. (Participant contract verification is available via `finsim verify --url <url>`, closed #25).

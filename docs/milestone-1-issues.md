@@ -18,7 +18,7 @@ Add Spring Modulith and ArchUnit checks so modules cannot touch each other's int
 
 **3. Database baseline** `[milestone-1]` `[done]`
 PostgreSQL 17 + Flyway; base migration with common columns (`id`, `created_at`, `updated_at`, `version`); Testcontainers for automated tests, Docker Compose for local development. Strict PostgreSQL parity (no H2 fallback).
-*Status:* Completed. Flyway `V1__baseline.sql`, `V2__registry.sql`, and `V3__widen_transfer_amount_scale.sql` (NUMERIC(22, 8) precision, closed [#46](https://github.com/mhnuk2007/finsim/issues/46) in [#66](https://github.com/mhnuk2007/finsim/pull/66)) verified with Testcontainers and Compose.
+*Status:* Completed. Flyway `V1__baseline.sql`, `V2__registry.sql`, `V3__widen_transfer_amount_scale.sql` (NUMERIC(22, 8) precision, closed [#46](https://github.com/mhnuk2007/finsim/issues/46) in [#66](https://github.com/mhnuk2007/finsim/pull/66)), and `V4__add_fault_rule_seed.sql` (closed [#22](https://github.com/mhnuk2007/finsim/issues/22) in [#89](https://github.com/mhnuk2007/finsim/pull/89)) verified with Testcontainers and Compose.
 
 **4. Publish the contract** `[milestone-1]` `[done]`
 Add `contract/finsim-v1.openapi.yaml`, validate it in CI, generate server stubs or models from it.

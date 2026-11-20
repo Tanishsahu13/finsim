@@ -11,7 +11,8 @@ FinSim uses **PostgreSQL 17** exclusively across all environments. There is no H
   - `finsim-api/src/main/resources/db/migration/V1__baseline.sql`: platform foundation tables (`transfers`, `transfer_stages`, `fault_rules`, legacy baseline).
   - `finsim-registry/src/main/resources/db/migration/V2__registry.sql`: registry tables (`registry_institutions`, `registry_networks`, and relationships).
   - `finsim-api/src/main/resources/db/migration/V3__widen_transfer_amount_scale.sql`: widens `transfers.amount` from `NUMERIC(18, 4)` to `NUMERIC(22, 8)` to align with the 8-decimal Money domain model and high-precision/crypto amounts (closed #46 in #66).
-  - Version numbering is globally sequential (`V1`, `V2`, `V3`, ...) across all modules.
+  - `finsim-api/src/main/resources/db/migration/V4__add_fault_rule_seed.sql`: adds `seed` column (`BIGINT`) to `fault_rules` table to enable deterministic pseudo-random number generator (PRNG) evaluation for probabilistic faults (closed #22 in #89).
+  - Version numbering is globally sequential (`V1`, `V2`, `V3`, `V4`, ...) across all modules.
 - **Common Audit and Concurrency Columns**: Every persistent entity table maintains:
   - `created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP`
   - `updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP`
@@ -24,7 +25,7 @@ FinSim uses **PostgreSQL 17** exclusively across all environments. There is no H
 
 ## 2. Table Definitions
 
-### Platform Foundation (`V1__baseline.sql`, `V3__widen_transfer_amount_scale.sql`)
+### Platform Foundation (`V1__baseline.sql`, `V3__widen_transfer_amount_scale.sql`, `V4__add_fault_rule_seed.sql`)
 
 #### `transfers`
 The central aggregate root for payment transfers.
@@ -77,6 +78,7 @@ Simulation rules injected dynamically to simulate real-world network anomalies.
 | `delay_ms` | `INTEGER` | Nullable | Milliseconds of simulated delay |
 | `probability` | `DOUBLE PRECISION` | `NOT NULL DEFAULT 1.0` | Probability between 0.0 and 1.0 |
 | `remaining_count` | `INTEGER` | Nullable | Executions remaining before expiration (null = infinite) |
+| `seed` | `BIGINT` | Nullable | Deterministic PRNG seed for reproducible probabilistic fault injection (issue #22) |
 | `version` | `BIGINT` | `NOT NULL DEFAULT 0` | Optimistic locking version |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT CURRENT_TIMESTAMP` | Creation timestamp |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT CURRENT_TIMESTAMP` | Last updated timestamp |
@@ -172,7 +174,7 @@ public class TestcontainersConfiguration {
 }
 ```
 
-This dynamically spins up a fresh, isolated PostgreSQL 17 container, applies all Flyway migrations (`V1`, `V2`), runs the test suite, and cleanly tears down the container afterward.
+This dynamically spins up a fresh, isolated PostgreSQL 17 container, applies all Flyway migrations (`V1` through `V4`), runs the test suite, and cleanly tears down the container afterward.
 
 ### Running with Testcontainers Interactively
 You can run the full API application against an ephemeral Testcontainers database without Docker Compose:
