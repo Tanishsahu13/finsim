@@ -150,7 +150,7 @@ public class TransferOrchestrator {
       case TIMED_OUT -> {
         transfer.markUnknown(
             "debit_source",
-            PendingAction.REVERSE_DEBIT,
+            PendingAction.NONE,
             false,
             debitOutcome.errorMessage(),
             clock.instant());

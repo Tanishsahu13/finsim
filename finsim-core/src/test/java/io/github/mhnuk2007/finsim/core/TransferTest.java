@@ -625,6 +625,33 @@ class TransferTest {
     }
 
     @Test
+    @DisplayName(
+        "External participant rejections (SOURCE, DESTINATION) matching ApiErrorCode names are allowed")
+    void allowsExternalParticipantCodesMatchingApiErrorCode() {
+      Transfer transfer1 = createStandardTransfer();
+      transfer1.accept("v", BASE_TIME.plusSeconds(1));
+      transfer1.reject(
+          "debit_source",
+          "BAD_REQUEST",
+          Emitter.SOURCE,
+          "Debit rejected by bank",
+          BASE_TIME.plusSeconds(2));
+      assertThat(transfer1.getReasonCode()).isEqualTo("BAD_REQUEST");
+      assertThat(transfer1.getEmittedBy()).isEqualTo(Emitter.SOURCE);
+
+      Transfer transfer2 = createStandardTransfer();
+      transfer2.accept("v", BASE_TIME.plusSeconds(1));
+      transfer2.reject(
+          "credit_destination",
+          "NOT_FOUND",
+          Emitter.DESTINATION,
+          "Account not found",
+          BASE_TIME.plusSeconds(2));
+      assertThat(transfer2.getReasonCode()).isEqualTo("NOT_FOUND");
+      assertThat(transfer2.getEmittedBy()).isEqualTo(Emitter.DESTINATION);
+    }
+
+    @Test
     @DisplayName("Resolution status can be updated while UNKNOWN")
     void updateResolutionStatusWhileUnknown() {
       Transfer transfer = createStandardTransfer();

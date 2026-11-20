@@ -279,12 +279,12 @@ public class Transfer {
     if (reasonCode.isBlank()) {
       throw new IllegalArgumentException("reasonCode must not be blank for REJECTED state");
     }
-    if (ApiErrorCode.find(reasonCode).isPresent()) {
+    Objects.requireNonNull(emittedBy, "emittedBy must not be null for REJECTED state");
+    if (emittedBy == Emitter.FINSIM && ApiErrorCode.find(reasonCode).isPresent()) {
       throw new IllegalArgumentException(
           "API error code '%s' cannot be used as a transfer rejection reason code"
               .formatted(reasonCode));
     }
-    Objects.requireNonNull(emittedBy, "emittedBy must not be null for REJECTED state");
 
     transitionTo(TransferState.REJECTED);
     this.currentStage = stage;

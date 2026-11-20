@@ -605,4 +605,40 @@ class TransferWorkflowTests {
             eq(key + ":rev"),
             argThat(req -> txId.equals(req.reversalOf())));
   }
+
+  @Test
+  @DisplayName(
+      "Issue #82: Outbound source debit timeout marks UNKNOWN with pendingAction NONE (ADR 0001)")
+  void sourceDebitTimeoutSetsPendingActionNone() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "75.00", "REF-DEB-TIMEOUT");
+
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.timedOut("Source bank read timeout"));
+
+    HttpResponse<String> res = postTransfer("sandbox", key, payload);
+    assertThat(res.statusCode()).isEqualTo(201);
+
+    assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("UNKNOWN");
+    assertThat(JsonPath.<String>read(res.body(), "$.pendingAction")).isEqualTo("NONE");
+    assertThat(JsonPath.<String>read(res.body(), "$.currentStage")).isEqualTo("debit_source");
+  }
+
+  @Test
+  @DisplayName(
+      "Issue #83: Participant HTTP 400/409 responses are classified as REJECTED instead of TIMED_OUT")
+  void participantHttp400And409ClassifiedAsRejected() throws Exception {
+    String key = randomKey();
+    String payload = transferJson("bank-a", "ACC-1", "bank-b", "ACC-2", "120.00", "REF-400-REJ");
+
+    // Participant returns HTTP 400 rejection (e.g. invalid account format)
+    when(participantClient.applyLeg(eq("http://localhost:9001"), any(), any()))
+        .thenReturn(PaymentCallOutcome.rejected("AC01", "Invalid account format"));
+
+    HttpResponse<String> res = postTransfer("sandbox", key, payload);
+    assertThat(res.statusCode()).isEqualTo(201);
+    assertThat(JsonPath.<String>read(res.body(), "$.state")).isEqualTo("REJECTED");
+    assertThat(JsonPath.<String>read(res.body(), "$.reasonCode")).isEqualTo("AC01");
+    assertThat(JsonPath.<String>read(res.body(), "$.emittedBy")).isEqualTo("SOURCE");
+  }
 }
